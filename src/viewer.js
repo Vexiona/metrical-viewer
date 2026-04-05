@@ -133,13 +133,4 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'ArrowDown') selectnext();
   });
 
-  // Propagate .speech class to siblings until .newpara
-  $$('.speech').forEach(function(el) {
-    var next = el.nextElementSibling;
-    while (next && !next.classList.contains('newpara')) {
-      next.classList.add('speech');
-      next = next.nextElementSibling;
-    }
-  });
-
 });

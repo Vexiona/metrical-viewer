@@ -125,14 +125,6 @@ body {
   border-radius: 0 0 50% 50%;
 }
 
-.newpara {
-  margin-top: 2em;
-}
-
-.speech {
-  background: #F2F2F2;
-}
-
 .wordend::after {
   content: "\00a0";
 }
