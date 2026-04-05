@@ -84,6 +84,7 @@ body {
 
 .selected {
   line-height: 200%;
+  white-space: nowrap;
 }
 
 .selected .short,
