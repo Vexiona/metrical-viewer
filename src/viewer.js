@@ -8,8 +8,8 @@ function colors() {
   setStyle('.short', 'backgroundColor', '');
   setStyle('.long', 'backgroundColor', '');
   if (document.getElementById('colors_box').checked) {
-    setStyle('.selected .short', 'backgroundColor', '#F5D9BC');
-    setStyle('.selected .long', 'backgroundColor', '#C8DCE3');
+    setStyle('.selected .short', 'backgroundColor', '#DDD5EB');
+    setStyle('.selected .long', 'backgroundColor', '#C8DCCB');
   }
 }
 
@@ -49,10 +49,6 @@ function scansion() {
     $$('.selected .short, .selected .long').forEach(function(el) {
       el.classList.add('scansion');
     });
-  }
-  if (document.getElementById('colors_box').checked) {
-    setStyle('.selected .short', 'backgroundColor', '#F5D9BC');
-    setStyle('.selected .long', 'backgroundColor', '#C8DCE3');
   }
 }
 

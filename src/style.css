@@ -55,31 +55,31 @@ body {
 .selected .long {
   display: inline-block;
   min-width: 1em;
-  padding-top: 0.5em;
+  padding-bottom: 0.35em;
   margin-right: 1px;
   text-align: center;
   position: relative;
 }
 
-.selected .short.scansion::before,
-.selected .long.scansion::before {
+.selected .short.scansion::after,
+.selected .long.scansion::after {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.selected .long.scansion::before {
+.selected .long.scansion::after {
   content: "";
   width: 0.6em;
-  top: 0.45em;
+  bottom: 0.1em;
   border-top: 2px solid #000;
 }
 
-.selected .short.scansion::before {
+.selected .short.scansion::after {
   content: "";
   width: 0.55em;
   height: 0.15em;
-  top: 0.3em;
+  bottom: 0.05em;
   border: 2px solid #000;
   border-top: none;
   border-radius: 0 0 50% 50%;
