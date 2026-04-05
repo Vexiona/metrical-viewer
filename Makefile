@@ -16,6 +16,6 @@ build/viewer.html: build/viewer_raw.html src/merge.py src/style.css src/viewer.j
 	python3 src/merge.py build/viewer_raw.html -o build/viewer.html
 
 clean:
-	rm -f build/*
+	rm -rf build/*
 
 .PHONY: all clean

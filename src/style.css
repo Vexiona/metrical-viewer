@@ -8,6 +8,15 @@ body {
   overflow: hidden;
 }
 
+#title {
+  background-color: #fff;
+  padding: 0.6em 1em 0.3em;
+  font-family: system-ui, sans-serif;
+  font-size: 1.1em;
+  color: #333;
+  flex-shrink: 0;
+}
+
 #buttons {
   background-color: #fff;
   padding: 0.6em 1em;
