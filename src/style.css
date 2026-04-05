@@ -1,33 +1,59 @@
-#buttons {
-  width: 95%;
-  opacity: 0.9;
-  background-color: #e6e6e6;
-  z-index: 1001;
-  position: fixed;
-  padding: 0px;
-  margin-top: 0;
-  margin-right: 10px;
-  box-shadow: 0em .1em .5em .5em rgba(0,0,0,.45);
-}
-
 body {
   background-color: #eee;
   color: #555;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#buttons {
+  background-color: #fff;
+  padding: 0.6em 1em;
+  display: flex;
+  gap: 1.2em;
+  justify-content: center;
+  border-bottom: 1px solid #ccc;
+  flex-shrink: 0;
+}
+
+#buttons label {
+  font-family: system-ui, sans-serif;
+  font-size: 0.85em;
+  color: #444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+#buttons input[type="checkbox"] {
+  accent-color: #667;
 }
 
 .greektext {
-  z-index: 1000;
   background-color: #fff;
-  margin: 6em auto;
-  margin-top: 3em;
-  padding: 0.5em;
-  border-radius: .25em;
-  box-shadow: .1em .1em .5em rgba(0,0,0,.45);
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  text-align: center;
+}
+
+.greektext-inner {
   display: inline-block;
+  text-align: left;
+  padding: 0.5em;
 }
 
 .epigram {
   margin-bottom: 1.5em;
+}
+
+.epigram-num {
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 0.2em;
 }
 
 .line {
@@ -104,4 +130,20 @@ body {
 
 .nonstandard {
   background-color: #ffa;
+}
+
+@media (max-width: 600px) {
+  .greektext-inner {
+    display: block;
+  }
+
+  .line {
+    margin-left: 0;
+  }
+
+  .ref {
+    min-width: 2em;
+    padding: 0 0.2em;
+    margin-right: 0.2em;
+  }
 }

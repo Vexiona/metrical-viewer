@@ -178,19 +178,20 @@ def read_verses(csv_path, label=''):
             except ValueError:
                 v_num = 0
 
-            ref = f"{epigram}.{verse_id}" if epigram and verse_id else ''
+            ref = verse_id or ''
+            full_ref = f"{epigram}.{verse_id}" if epigram and verse_id else ''
 
             if not scheme:
                 raw = text.replace('#', '').replace('  ', ' ')
                 html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
-                print(f"Warning: {tag}{ref}: no scheme", file=sys.stderr)
+                print(f"Warning: {tag}{full_ref}: no scheme", file=sys.stderr)
             else:
                 try:
                     html = generate_line(text, scheme, caesurae, std, ref)
                 except ValueError as e:
                     raw = text.replace('#', '').replace('  ', ' ')
                     html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
-                    print(f"Warning: {tag}{ref}: {e}", file=sys.stderr)
+                    print(f"Warning: {tag}{full_ref}: {e}", file=sys.stderr)
 
             verses.append({
                 'epigram': ep_num,
@@ -212,14 +213,16 @@ def assemble_page(verses):
         if v['epigram'] != current_ep:
             if current_ep is not None:
                 parts.append('    </div>')
+            ep_display = int(v['epigram']) if v['epigram'] == int(v['epigram']) else v['epigram']
             parts.append('    <div class="epigram">')
+            parts.append(f'    <div class="epigram-num"><span class="ref">ep. {ep_display}</span></div>')
             current_ep = v['epigram']
         parts.append(v['html'])
     if current_ep is not None:
         parts.append('    </div>')
 
     body = '\n'.join(parts)
-    return header + '<div class="greektext">\n' + body + '\n</div>\n' + footer
+    return header + '<div class="greektext">\n<div class="greektext-inner">\n' + body + '\n</div>\n</div>\n' + footer
 
 
 def main():

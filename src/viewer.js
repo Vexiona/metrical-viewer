@@ -64,11 +64,14 @@ function selectLine(line, direction) {
   $$('.selected').forEach(function(s) { s.classList.remove('selected'); });
   line.classList.add('selected');
   updateVisuals();
+  var container = document.querySelector('.greektext');
   var rect = line.getBoundingClientRect();
-  var h = window.innerHeight;
-  if (rect.top < h * 0.1 || rect.bottom > h * 0.9) {
+  var cRect = container.getBoundingClientRect();
+  var h = cRect.height;
+  var relTop = rect.top - cRect.top;
+  if (relTop < h * 0.1 || rect.bottom - cRect.top > h * 0.9) {
     var target = direction === 'up' ? h / 3 : h * 2 / 3;
-    window.scrollBy({ top: rect.top - target, behavior: 'instant' });
+    container.scrollBy({ top: relTop - target, behavior: 'instant' });
   }
 }
 
@@ -93,6 +96,10 @@ function selectprev() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Lock inner container width so selected verses don't shift centering
+  var inner = document.querySelector('.greektext-inner');
+  if (inner) inner.style.width = inner.offsetWidth + 'px';
+
   $$('.line').forEach(function(el) {
     el.addEventListener('click', function() {
       var wasSelected = el.classList.contains('selected');
