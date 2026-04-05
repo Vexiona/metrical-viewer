@@ -17,8 +17,15 @@ function feet() {
   $$('.footend').forEach(function(el) { el.style.borderRight = ''; });
   if (document.getElementById('feet_box').checked) {
     $$('.selected .footend').forEach(function(el) {
-      var isDiaeresis = el.classList.contains('wordend');
-      el.style.borderRight = isDiaeresis ? '2px solid blue' : '2px dashed blue';
+      el.style.borderRight = '2px dashed blue';
+    });
+  }
+}
+
+function diaereses() {
+  if (document.getElementById('diaeresis_box').checked) {
+    $$('.selected .diaeresis').forEach(function(el) {
+      el.style.borderRight = '2px solid blue';
     });
   }
 }
@@ -54,7 +61,7 @@ function scansion() {
 }
 
 function updateVisuals() {
-  scansion(); colors(); caesura(); feet();
+  scansion(); colors(); caesura(); feet(); diaereses();
 }
 
 function allLines() {
@@ -113,7 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   document.getElementById('colors_box').addEventListener('click', colors);
-  document.getElementById('feet_box').addEventListener('click', feet);
+  document.getElementById('feet_box').addEventListener('click', function() { feet(); diaereses() });
+  document.getElementById('diaeresis_box').addEventListener('click', function() { feet(); diaereses() });
   document.getElementById('caesura_box').addEventListener('click', caesura);
   document.getElementById('scansion_box').addEventListener('click', scansion);
 

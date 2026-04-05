@@ -113,9 +113,9 @@ def verify_diaereses(verses, rows, header_rows, cols):
             csv_has = bool(csv_val)
             comp_has = foot in computed
             if csv_has and not comp_has:
-                print(f"Warning: {ref}: diaeresis D{foot} in spreadsheet but not in text", file=sys.stderr)
+                print(f"Warning: [Hexameter] {ref}: diaeresis D{foot} in spreadsheet but not in text", file=sys.stderr)
             elif comp_has and not csv_has:
-                print(f"Warning: {ref}: diaeresis D{foot} in text but not in spreadsheet", file=sys.stderr)
+                print(f"Warning: [Hexameter] {ref}: diaeresis D{foot} in text but not in spreadsheet", file=sys.stderr)
 
 
 def load(csv_path):

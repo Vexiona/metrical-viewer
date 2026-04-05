@@ -34,6 +34,8 @@ def generate_line(v):
             classes.append('wordend')
         if is_footend and i < len(syllables) - 1:
             classes.append('footend')
+            if is_wordend:
+                classes.append('diaeresis')
         if i + 1 in caesurae:
             classes.append('caesura')
         spans.append((classes, syl_text))
