@@ -6,7 +6,8 @@ The ‖ marks the caesura.
 """
 
 import sys
-from common import FOOT_SIZE, find_columns, read_csv, process_rows
+from common import (FOOT_SIZE, find_columns, read_csv, process_rows,
+                    compute_homodynia, ictus_positions, verify_homodynia)
 
 HEADER_ROWS = 3
 
@@ -47,12 +48,12 @@ def convert_verse(row, ref, cols):
     scheme_raw = row[scheme_col].strip() if scheme_col and len(row) > scheme_col else ''
 
     if not scheme_raw:
-        print(f"Warning: {ref}: no scheme", file=sys.stderr)
+        print(f"Warning: [Pentameter] {ref}: no scheme", file=sys.stderr)
         return None
 
     our_scheme, caesura = parse_pent_scheme(scheme_raw)
     if our_scheme is None:
-        print(f"Warning: {ref}: unparseable scheme '{scheme_raw}'", file=sys.stderr)
+        print(f"Warning: [Pentameter] {ref}: unparseable scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
     caesurae = [caesura] if caesura else []
@@ -65,4 +66,15 @@ def load(csv_path):
     cols = find_columns(rows, HEADER_ROWS)
     print(f"Detected columns: {cols}", file=sys.stderr)
     verses, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse, meter='Pentameter')
+
+    # Compute homodynia (ictus on 1st syllable)
+    for v in verses:
+        if v['syllables'] is not None and v['scheme']:
+            v['homodynia'] = compute_homodynia(v['scheme'], v['syllables'], ictus='first')
+            v['_ictus_positions'] = ictus_positions(v['scheme'], ictus='first')
+        else:
+            v['homodynia'] = []
+            v['_ictus_positions'] = {}
+
+    verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Pentameter')
     return verses

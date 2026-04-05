@@ -138,6 +138,21 @@ body {
   z-index: 1;
 }
 
+.selected .homodynia::before {
+  content: "\2022";
+  position: absolute;
+  top: -0.55em;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #c44;
+  font-size: 0.7em;
+  display: none;
+}
+
+.selected .homodynia.show-homodynia::before {
+  display: block;
+}
+
 .wordend::after {
   content: "\00a0";
 }

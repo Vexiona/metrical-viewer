@@ -2,6 +2,7 @@
 
 import csv
 import sys
+import unicodedata
 
 # All known foot tokens across all meters.
 # Maps spreadsheet token -> internal code.
@@ -24,6 +25,7 @@ _TOKENS_BY_LENGTH = sorted(FOOT_TOKENS, key=len, reverse=True)
 FOOT_SIZE = {
     'D': 3, 'S': 2, 'T': 2, 'I': 2,
     'A': 3, 'C': 3, 'B': 3, 'b': 3, 'P': 2,
+    'l': 1, 'e': 1,
 }
 
 # Foot types: code -> list of quantities per syllable
@@ -174,6 +176,79 @@ def verify_bridges(verses, rows, header_rows, cols, meter, bridge_names):
                 print(f"Warning: [{meter}] {ref}: bridge {name} computed but not in spreadsheet", file=sys.stderr)
 
 
+def has_accent(syllable):
+    """Check if a Greek syllable contains an accented vowel."""
+    nfd = unicodedata.normalize('NFD', syllable)
+    return any(c in '\u0301\u0300\u0342' for c in nfd)
+
+
+def compute_homodynia(scheme, syllables, ictus='first'):
+    """Return sorted list of 1-based foot numbers with homodynia.
+
+    ictus: 'first' (hex/pent) or 'last' (iamb)
+    """
+    result = []
+    pos = 0
+    for i, code in enumerate(scheme):
+        size = FOOT_SIZE.get(code, 0)
+        idx = pos if ictus == 'first' else pos + size - 1
+        if idx < len(syllables) and has_accent(syllables[idx][0]):
+            result.append(i + 1)
+        pos += size
+    return result
+
+
+def ictus_positions(scheme, ictus='first'):
+    """Return dict mapping 1-based foot number to syllable index of its ictus."""
+    positions = {}
+    pos = 0
+    for i, code in enumerate(scheme):
+        size = FOOT_SIZE.get(code, 0)
+        idx = pos if ictus == 'first' else pos + size - 1
+        positions[i + 1] = idx
+        pos += size
+    return positions
+
+
+def verify_homodynia(verses, rows, header_rows, cols, meter):
+    """Compare computed homodynia with spreadsheet column."""
+    hom_col = cols.get('homodynia')
+    if hom_col is None:
+        return
+
+    data_rows = rows[header_rows:]
+    text_col = cols['text']
+    verse_idx = 0
+
+    for row in data_rows:
+        text = row[text_col].strip() if len(row) > text_col else ''
+        if not text:
+            continue
+        if verse_idx >= len(verses):
+            break
+
+        v = verses[verse_idx]
+        verse_idx += 1
+
+        if v['syllables'] is None or not v['scheme']:
+            continue
+
+        ref = f"{v['epigram']}.{v['verse']}"
+        computed = v.get('homodynia', [])
+
+        csv_val = row[hom_col].strip() if len(row) > hom_col else ''
+        csv_clean = csv_val.replace('_', '').strip()
+        csv_feet = sorted(int(x) for x in csv_clean.split() if x.isdigit()) if csv_clean else []
+
+        if computed != csv_feet:
+            comp_only = set(computed) - set(csv_feet)
+            csv_only = set(csv_feet) - set(computed)
+            if csv_only:
+                print(f"Warning: [{meter}] {ref}: homodynia feet {csv_only} in spreadsheet but not computed", file=sys.stderr)
+            if comp_only:
+                print(f"Warning: [{meter}] {ref}: homodynia feet {comp_only} computed but not in spreadsheet", file=sys.stderr)
+
+
 def expand_scheme(scheme):
     """Expand a scheme string into per-syllable (quantity, is_foot_end) list."""
     result = []
@@ -249,6 +324,8 @@ def find_columns(rows, header_rows=3):
                 cols['bridge_naeke'] = j
             elif v.startswith('hilberg') and 'bridge_hilberg' not in cols:
                 cols['bridge_hilberg'] = j
+            elif v.startswith('homodynia') and 'homodynia' not in cols:
+                cols['homodynia'] = j
 
     if len(rows) > header_rows:
         data_row = rows[header_rows]

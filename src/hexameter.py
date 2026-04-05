@@ -1,7 +1,9 @@
 """Hexameter spreadsheet converter."""
 
 import sys
-from common import FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv, process_rows, verify_bridges
+from common import (FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv,
+                    process_rows, verify_bridges, compute_homodynia, ictus_positions,
+                    verify_homodynia)
 
 NUM_FEET = 6
 HEADER_ROWS = 3
@@ -55,12 +57,12 @@ def convert_verse(row, ref, cols):
     scheme_raw = row[scheme_col].strip() if scheme_col and len(row) > scheme_col else ''
 
     if not scheme_raw:
-        print(f"Warning: {ref}: no scheme", file=sys.stderr)
+        print(f"Warning: [Hexameter] {ref}: no scheme", file=sys.stderr)
         return None
 
     our_scheme = parse_scheme(scheme_raw, num_feet=NUM_FEET)
     if our_scheme is None:
-        print(f"Warning: {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
+        print(f"Warning: [Hexameter] {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
     caesurae = pick_caesurae(row, our_scheme, cols)
@@ -167,7 +169,17 @@ def load(csv_path):
         else:
             v['bridges'] = {}
 
+    # Compute homodynia (ictus on 1st syllable)
+    for v in verses:
+        if v['syllables'] is not None and v['scheme']:
+            v['homodynia'] = compute_homodynia(v['scheme'], v['syllables'], ictus='first')
+            v['_ictus_positions'] = ictus_positions(v['scheme'], ictus='first')
+        else:
+            v['homodynia'] = []
+            v['_ictus_positions'] = {}
+
     verify_diaereses(verses, rows, HEADER_ROWS, cols)
     verify_bridges(verses, rows, HEADER_ROWS, cols, 'Hexameter',
                    ['meyer', 'hermann', 'naeke', 'hilberg'])
+    verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Hexameter')
     return verses

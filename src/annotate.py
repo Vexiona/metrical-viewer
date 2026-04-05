@@ -1,6 +1,5 @@
 """HTML generation from pre-parsed verse data."""
 
-import sys
 from pathlib import Path
 from common import STANDARD
 
@@ -18,6 +17,9 @@ def generate_line(v):
     meter = v['meter']
     caesurae = v.get('caesurae', [])
     bridge_positions = set(v.get('bridges', {}).values())
+    homodynia_feet = set(v.get('homodynia', []))
+    ictus_pos = v.get('_ictus_positions', {})
+    homodynia_syls = {ictus_pos[f] for f in homodynia_feet if f in ictus_pos}
     syllables = v['syllables']
     quantities = v['quantities']
 
@@ -41,6 +43,8 @@ def generate_line(v):
             classes.append('caesura')
         if i in bridge_positions:
             classes.append('bridge')
+        if i in homodynia_syls:
+            classes.append('homodynia')
         spans.append((classes, syl_text))
 
     lines = []
@@ -57,14 +61,10 @@ def generate_line(v):
 
 def verse_to_html(v):
     """Convert a verse dict to HTML. Handles errors and missing data."""
-    tag = f"[{v['meter']}] " if v['meter'] else ''
-    full_ref = f"{v['epigram']}.{v['verse']}" if v['epigram'] and v['verse'] else ''
     ref = v['verse'] or ''
 
     if not v['scheme'] or v['syllables'] is None:
         raw = v['text'].replace('#', '').replace('  ', ' ')
-        if not v['scheme']:
-            print(f"Warning: {tag}{full_ref}: no scheme", file=sys.stderr)
         return f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
 
     return generate_line(v)

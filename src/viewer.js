@@ -48,6 +48,15 @@ function bridges() {
   }
 }
 
+function homodynia() {
+  $$('.homodynia').forEach(function(el) { el.classList.remove('show-homodynia'); });
+  if (document.getElementById('homodynia_box').checked) {
+    $$('.selected .homodynia').forEach(function(el) {
+      el.classList.add('show-homodynia');
+    });
+  }
+}
+
 function caesura() {
   $$('.caesura').forEach(function(el) {
     var next = el.nextElementSibling;
@@ -79,7 +88,7 @@ function scansion() {
 }
 
 function updateVisuals() {
-  scansion(); colors(); caesura(); feet(); diaereses(); bridges();
+  scansion(); colors(); caesura(); feet(); diaereses(); bridges(); homodynia();
 }
 
 function allLines() {
@@ -143,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('caesura_box').addEventListener('click', caesura);
   document.getElementById('scansion_box').addEventListener('click', scansion);
   document.getElementById('bridges_box').addEventListener('click', bridges);
+  document.getElementById('homodynia_box').addEventListener('click', homodynia);
 
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;

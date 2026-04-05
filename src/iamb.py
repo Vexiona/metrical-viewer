@@ -1,7 +1,9 @@
 """Iambic trimeter spreadsheet converter."""
 
 import sys
-from common import FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv, process_rows, verify_bridges
+from common import (FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv,
+                    process_rows, verify_bridges, compute_homodynia, ictus_positions,
+                    verify_homodynia)
 
 HEADER_ROWS = 3
 
@@ -11,12 +13,12 @@ def convert_verse(row, ref, cols):
     scheme_raw = row[scheme_col].strip() if scheme_col and len(row) > scheme_col else ''
 
     if not scheme_raw:
-        print(f"Warning: {ref}: no scheme", file=sys.stderr)
+        print(f"Warning: [Iamb] {ref}: no scheme", file=sys.stderr)
         return None
 
     our_scheme = parse_scheme(scheme_raw)
     if our_scheme is None:
-        print(f"Warning: {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
+        print(f"Warning: [Iamb] {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
     caesurae = []
@@ -60,5 +62,15 @@ def load(csv_path):
         else:
             v['bridges'] = {}
 
+    # Compute homodynia (ictus on last syllable of each foot)
+    for v in verses:
+        if v['syllables'] is not None and v['scheme']:
+            v['homodynia'] = compute_homodynia(v['scheme'], v['syllables'], ictus='last')
+            v['_ictus_positions'] = ictus_positions(v['scheme'], ictus='last')
+        else:
+            v['homodynia'] = []
+            v['_ictus_positions'] = {}
+
     verify_bridges(verses, rows, HEADER_ROWS, cols, 'Iamb', ['porson'])
+    verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Iamb')
     return verses
