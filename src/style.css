@@ -55,10 +55,34 @@ body {
 .selected .long {
   display: inline-block;
   min-width: 1em;
-  padding-top: 0.2em;
-  background-origin: content-box;
+  padding-top: 0.5em;
   margin-right: 1px;
   text-align: center;
+  position: relative;
+}
+
+.selected .short.scansion::before,
+.selected .long.scansion::before {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.selected .long.scansion::before {
+  content: "";
+  width: 0.6em;
+  top: 0.45em;
+  border-top: 2px solid #000;
+}
+
+.selected .short.scansion::before {
+  content: "";
+  width: 0.55em;
+  height: 0.15em;
+  top: 0.3em;
+  border: 2px solid #000;
+  border-top: none;
+  border-radius: 0 0 50% 50%;
 }
 
 .newpara {
