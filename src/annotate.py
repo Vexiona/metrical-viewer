@@ -17,6 +17,7 @@ def generate_line(v):
     scheme = v['scheme']
     meter = v['meter']
     caesurae = v.get('caesurae', [])
+    bridge_positions = set(v.get('bridges', {}).values())
     syllables = v['syllables']
     quantities = v['quantities']
 
@@ -38,6 +39,8 @@ def generate_line(v):
                 classes.append('diaeresis')
         if i + 1 in caesurae:
             classes.append('caesura')
+        if i in bridge_positions:
+            classes.append('bridge')
         spans.append((classes, syl_text))
 
     lines = []

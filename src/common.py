@@ -41,7 +41,7 @@ FEET = {
     'b': ['short', 'short', 'short'],
 }
 
-# Standard feet per meter (anything else gets warning style)
+# Standard feet per meter (anything else gets 'nonstandard' class)
 STANDARD = {
     'Hexameter': set('DST'),
     'Iamb': set('SIP'),
@@ -122,6 +122,58 @@ def merge_syllables(syllables):
     return syllables
 
 
+def foot_starts(scheme):
+    """Return list of syllable indices where each foot starts."""
+    starts = []
+    pos = 0
+    for code in scheme:
+        starts.append(pos)
+        pos += FOOT_SIZE.get(code, 0)
+    return starts
+
+
+def verify_bridges(verses, rows, header_rows, cols, meter, bridge_names):
+    """Compare computed bridge violations with spreadsheet columns.
+
+    bridge_names: list of bridge names to check (e.g. ['meyer', 'hermann']).
+    Looks for cols['bridge_<name>'] for each.
+    """
+    bridge_cols = {name: cols.get(f'bridge_{name}') for name in bridge_names}
+    if not any(v is not None for v in bridge_cols.values()):
+        return
+
+    data_rows = rows[header_rows:]
+    text_col = cols['text']
+    verse_idx = 0
+
+    for row in data_rows:
+        text = row[text_col].strip() if len(row) > text_col else ''
+        if not text:
+            continue
+        if verse_idx >= len(verses):
+            break
+
+        v = verses[verse_idx]
+        verse_idx += 1
+
+        if v['syllables'] is None or not v['scheme']:
+            continue
+
+        ref = f"{v['epigram']}.{v['verse']}"
+        computed = v.get('bridges', {})
+
+        for name, col_idx in bridge_cols.items():
+            if col_idx is None:
+                continue
+            csv_val = row[col_idx].strip() if len(row) > col_idx else ''
+            csv_has = bool(csv_val)
+            comp_has = name in computed
+            if csv_has and not comp_has:
+                print(f"Warning: [{meter}] {ref}: bridge {name} in spreadsheet but not computed", file=sys.stderr)
+            elif comp_has and not csv_has:
+                print(f"Warning: [{meter}] {ref}: bridge {name} computed but not in spreadsheet", file=sys.stderr)
+
+
 def expand_scheme(scheme):
     """Expand a scheme string into per-syllable (quantity, is_foot_end) list."""
     result = []
@@ -171,7 +223,7 @@ def find_columns(rows, header_rows=3):
                 cols['scheme'] = j
             elif v == 'caesura':
                 cols['caesura'] = j
-            elif v == 'epigramme no.' and 'epigram' not in cols:
+            elif v.startswith('epigram') and 'no' in v and 'epigram' not in cols:
                 cols['epigram'] = j
             elif v == 'verse no.' and 'verse_num' not in cols:
                 cols['verse_num'] = j
@@ -187,6 +239,16 @@ def find_columns(rows, header_rows=3):
                 key = 'diaer_' + v[1]
                 if key not in cols:
                     cols[key] = j
+            elif v.startswith('porson') and 'bridge_porson' not in cols:
+                cols['bridge_porson'] = j
+            elif v.startswith('meyer') and 'bridge_meyer' not in cols:
+                cols['bridge_meyer'] = j
+            elif v.startswith('hermann') and 'bridge_hermann' not in cols:
+                cols['bridge_hermann'] = j
+            elif v.startswith('naeke') and 'bridge_naeke' not in cols:
+                cols['bridge_naeke'] = j
+            elif v.startswith('hilberg') and 'bridge_hilberg' not in cols:
+                cols['bridge_hilberg'] = j
 
     if len(rows) > header_rows:
         data_row = rows[header_rows]

@@ -125,10 +125,24 @@ body {
   border-radius: 0 0 50% 50%;
 }
 
+.selected .bridge::before {
+  content: "";
+  position: absolute;
+  top: -0.15em;
+  left: var(--bridge-l, 0);
+  height: 0.2em;
+  width: var(--bridge-w, 0);
+  border: 2px solid orange;
+  border-bottom: none;
+  border-radius: 50% 50% 0 0;
+  z-index: 1;
+}
+
 .wordend::after {
   content: "\00a0";
 }
 
+/*
 .error {
   color: #c44;
   font-style: italic;
@@ -137,6 +151,7 @@ body {
 .nonstandard {
   background-color: #ffa;
 }
+*/
 
 @media (max-width: 600px) {
   .greektext-inner {

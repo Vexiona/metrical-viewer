@@ -1,7 +1,7 @@
 """Hexameter spreadsheet converter."""
 
 import sys
-from common import FOOT_SIZE, parse_scheme, find_columns, read_csv, process_rows
+from common import FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv, process_rows, verify_bridges
 
 NUM_FEET = 6
 HEADER_ROWS = 3
@@ -67,6 +67,41 @@ def convert_verse(row, ref, cols):
     return our_scheme, caesurae
 
 
+def compute_bridges(scheme, syllables):
+    """Compute bridge violations from scheme and pre-parsed syllables.
+
+    Returns dict mapping bridge name to syllable index of the forbidden word-end.
+    """
+    violations = {}
+    starts = foot_starts(scheme)
+
+    # Meyer: 2nd foot (index 1) is dactylic, word-end between its two shorts
+    if len(scheme) > 1 and scheme[1] == 'D':
+        idx = starts[1] + 1  # 1st short of foot 2
+        if idx < len(syllables) and syllables[idx][1]:
+            violations['meyer'] = idx
+
+    # Hermann: 4th foot (index 3) is dactylic, word-end between its two shorts
+    if len(scheme) > 3 and scheme[3] == 'D':
+        idx = starts[3] + 1
+        if idx < len(syllables) and syllables[idx][1]:
+            violations['hermann'] = idx
+
+    # Hilberg: 2nd foot (index 1) is spondaic, word-end after foot 2
+    if len(scheme) > 1 and scheme[1] == 'S':
+        idx = starts[1] + FOOT_SIZE['S'] - 1
+        if idx < len(syllables) and syllables[idx][1]:
+            violations['hilberg'] = idx
+
+    # Naeke: 4th foot (index 3) is spondaic, word-end after foot 4
+    if len(scheme) > 3 and scheme[3] == 'S':
+        idx = starts[3] + FOOT_SIZE['S'] - 1
+        if idx < len(syllables) and syllables[idx][1]:
+            violations['naeke'] = idx
+
+    return violations
+
+
 def verify_diaereses(verses, rows, header_rows, cols):
     """Compare spreadsheet diaeresis columns with computed diaereses.
 
@@ -124,5 +159,15 @@ def load(csv_path):
     cols = find_columns(rows, HEADER_ROWS)
     print(f"Detected columns: {cols}", file=sys.stderr)
     verses, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse, meter='Hexameter')
+
+    # Compute bridges for each verse
+    for v in verses:
+        if v['syllables'] is not None and v['scheme']:
+            v['bridges'] = compute_bridges(v['scheme'], v['syllables'])
+        else:
+            v['bridges'] = {}
+
     verify_diaereses(verses, rows, HEADER_ROWS, cols)
+    verify_bridges(verses, rows, HEADER_ROWS, cols, 'Hexameter',
+                   ['meyer', 'hermann', 'naeke', 'hilberg'])
     return verses
