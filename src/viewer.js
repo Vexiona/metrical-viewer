@@ -60,21 +60,39 @@ function updateVisuals() {
   scansion(); colors(); caesura(); feet();
 }
 
+function allLines() {
+  return $$('.line');
+}
+
+function selectLine(line, direction) {
+  $$('.selected').forEach(function(s) { s.classList.remove('selected'); });
+  line.classList.add('selected');
+  updateVisuals();
+  var rect = line.getBoundingClientRect();
+  var h = window.innerHeight;
+  if (rect.top < h * 0.1 || rect.bottom > h * 0.9) {
+    var target = direction === 'up' ? h / 3 : h * 2 / 3;
+    window.scrollBy({ top: rect.top - target, behavior: 'instant' });
+  }
+}
+
 function selectnext() {
+  var lines = allLines();
   var sel = document.querySelector('.selected');
-  if (sel && sel.nextElementSibling) {
-    sel.nextElementSibling.classList.add('selected');
-    sel.classList.remove('selected');
-    updateVisuals();
+  if (!sel) return;
+  var idx = lines.indexOf(sel);
+  if (idx < lines.length - 1) {
+    selectLine(lines[idx + 1], 'down');
   }
 }
 
 function selectprev() {
+  var lines = allLines();
   var sel = document.querySelector('.selected');
-  if (sel && sel.previousElementSibling) {
-    sel.previousElementSibling.classList.add('selected');
-    sel.classList.remove('selected');
-    updateVisuals();
+  if (!sel) return;
+  var idx = lines.indexOf(sel);
+  if (idx > 0) {
+    selectLine(lines[idx - 1], 'up');
   }
 }
 
@@ -95,7 +113,10 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('caesura_box').addEventListener('click', caesura);
   document.getElementById('scansion_box').addEventListener('click', scansion);
 
-  document.addEventListener('keyup', function(e) {
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    if (!document.querySelector('.selected')) return;
+    e.preventDefault();
     if (e.key === 'ArrowUp') selectprev();
     if (e.key === 'ArrowDown') selectnext();
   });
