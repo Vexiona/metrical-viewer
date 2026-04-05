@@ -1,10 +1,10 @@
-"""Shared utilities for spreadsheet-to-CSV converters."""
+"""Shared utilities for spreadsheet parsing and verse annotation."""
 
 import csv
 import sys
 
 # All known foot tokens across all meters.
-# Maps spreadsheet token -> annotate.py code.
+# Maps spreadsheet token -> internal code.
 FOOT_TOKENS = {
     'D': 'D',       # Dactyl
     'S': 'S',       # Spondee
@@ -20,21 +20,122 @@ FOOT_TOKENS = {
 # Sorted longest-first for greedy matching
 _TOKENS_BY_LENGTH = sorted(FOOT_TOKENS, key=len, reverse=True)
 
-# Syllable count per annotate.py foot code
+# Syllable count per foot code
 FOOT_SIZE = {
     'D': 3, 'S': 2, 'T': 2, 'I': 2,
     'A': 3, 'C': 3, 'B': 3, 'b': 3, 'P': 2,
 }
 
+# Foot types: code -> list of quantities per syllable
+FEET = {
+    'S': ['long', 'long'],
+    'I': ['short', 'long'],
+    'D': ['long', 'short', 'short'],
+    'T': ['long', 'short'],
+    'A': ['short', 'short', 'long'],
+    'P': ['short', 'short'],
+    'l': ['long'],
+    'e': ['short'],
+    'C': ['long', 'short', 'long'],
+    'B': ['long', 'long', 'short'],
+    'b': ['short', 'short', 'short'],
+}
+
+# Standard feet per meter (anything else gets warning style)
+STANDARD = {
+    'Hexameter': set('DST'),
+    'Iamb': set('SIP'),
+    'Pentameter': set('DSle'),
+}
+
+DASHES = {'\u2013', '\u2015'}  # EN DASH, HORIZONTAL BAR
+
+GREEK_VOWELS = set('αεηιουωάέήίόύώὰὲὴὶὸὺὼᾶῆῖῦῶ'
+                    'ἀἁἂἃἄἅἆἇἐἑἒἓἔἕἠἡἢἣἤἥἦἧ'
+                    'ἰἱἲἳἴἵἶἷὀὁὂὃὄὅὐὑὒὓὔὕὖὗ'
+                    'ὠὡὢὣὤὥὦὧᾀᾁᾂᾃᾄᾅᾆᾇᾐᾑᾒᾓᾔᾕᾖᾗ'
+                    'ᾠᾡᾢᾣᾤᾥᾦᾧᾲᾳᾴᾷῂῃῄῇῒΐῢΰῲῳῴῷ'
+                    'ΑΕΗΙΟΥΩ')
+
+
+def parse_syllables(text):
+    """Parse verse text into syllables with word-boundary info.
+
+    Delimiters:
+        space = syllable break + word boundary
+        #     = syllable break within a word
+
+    Returns list of (text, is_wordend) tuples.
+    """
+    syllables = []
+    current = []
+
+    for ch in text:
+        if ch == '#':
+            syllables.append((''.join(current), False))
+            current = []
+        elif ch == ' ':
+            syllables.append((''.join(current), True))
+            current = []
+        else:
+            current.append(ch)
+
+    if current:
+        syllables.append((''.join(current), False))
+
+    return syllables
+
+
+def merge_syllables(syllables):
+    """Merge elided consonant-apostrophe syllables and dash-only syllables.
+
+    Returns new syllables list.
+    """
+    # Merge consonant elisions (apostrophe after consonant) with next syllable
+    i = 0
+    while i < len(syllables) - 1:
+        syl = syllables[i][0]
+        apos = syl.find("'")
+        if apos > 0 and syl[apos - 1].lower() not in GREEK_VOWELS:
+            merged_text = syl + '\u00a0' + syllables[i + 1][0]
+            merged_wordend = syllables[i + 1][1]
+            syllables = syllables[:i] + [(merged_text, merged_wordend)] + syllables[i + 2:]
+        i += 1
+
+    # Merge dash-only syllables with neighbor
+    merged = True
+    while merged:
+        merged = False
+        for i in range(len(syllables)):
+            if all(c in DASHES or c.isspace() for c in syllables[i][0]):
+                if i < len(syllables) - 1:
+                    merged_text = syllables[i][0] + syllables[i + 1][0]
+                    merged_wordend = syllables[i + 1][1]
+                    syllables = syllables[:i] + [(merged_text, merged_wordend)] + syllables[i + 2:]
+                elif i > 0:
+                    merged_text = syllables[i - 1][0] + syllables[i][0]
+                    merged_wordend = syllables[i][1] or syllables[i - 1][1]
+                    syllables = syllables[:i - 1] + [(merged_text, merged_wordend)]
+                merged = True
+                break
+
+    return syllables
+
+
+def expand_scheme(scheme):
+    """Expand a scheme string into per-syllable (quantity, is_foot_end) list."""
+    result = []
+    for code in scheme:
+        foot = FEET[code]
+        for i, q in enumerate(foot):
+            result.append((q, i == len(foot) - 1))
+    return result
+
 
 def parse_scheme(scheme_raw, num_feet=None):
-    """Parse a scheme string into annotate.py format.
+    """Parse a scheme string into internal format.
 
-    Args:
-        scheme_raw: scheme string from spreadsheet (e.g. 'DSDDDT', 'SApIApII')
-        num_feet: if set, reject schemes that don't have exactly this many feet
-
-    Returns annotate.py scheme string or None on failure.
+    Returns scheme string or None on failure.
     """
     result = []
     s = scheme_raw.strip()
@@ -60,10 +161,7 @@ def parse_scheme(scheme_raw, num_feet=None):
 
 
 def find_columns(rows, header_rows=3):
-    """Auto-detect column indices by scanning header rows and first data row.
-
-    Returns dict with keys: text, scheme, epigram, verse_num, and any caesura columns found.
-    """
+    """Auto-detect column indices by scanning header rows and first data row."""
     cols = {}
 
     for i in range(min(header_rows, len(rows))):
@@ -77,7 +175,6 @@ def find_columns(rows, header_rows=3):
                 cols['epigram'] = j
             elif v == 'verse no.' and 'verse_num' not in cols:
                 cols['verse_num'] = j
-            # Functional caesurae (hexameter)
             elif v == 'triem' and 'func_triem' not in cols:
                 cols['func_triem'] = j
             elif v == 'penth' and 'func_penth' not in cols:
@@ -86,8 +183,11 @@ def find_columns(rows, header_rows=3):
                 cols['func_hephth'] = j
             elif v.startswith('bucolic'):
                 cols['func_bucolic'] = j
+            elif v in ('d1', 'd2', 'd3', 'd4', 'd4 (bucolic)', 'd5'):
+                key = 'diaer_' + v[1]
+                if key not in cols:
+                    cols[key] = j
 
-    # Syllabified text: find the column with # markers in first data row
     if len(rows) > header_rows:
         data_row = rows[header_rows]
         for j in range(min(5, len(data_row))):
@@ -100,56 +200,26 @@ def find_columns(rows, header_rows=3):
     return cols
 
 
-def parse_args(description):
-    """Parse common CLI args: input.csv [-o output.csv]"""
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} input.csv [-o output.csv]", file=sys.stderr)
-        sys.exit(1)
-
-    in_path = sys.argv[1]
-    out_path = None
-    if '-o' in sys.argv:
-        out_path = sys.argv[sys.argv.index('-o') + 1]
-
-    return in_path, out_path
-
-
 def read_csv(path):
     """Read a CSV file with BOM handling."""
     with open(path, encoding='utf-8-sig') as f:
         return list(csv.reader(f))
 
 
-def write_csv(output_rows, out_path):
-    """Write output CSV with header."""
-    header = ['epigram', 'verse', 'text', 'scheme', 'caesura']
-    if out_path:
-        with open(out_path, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-            writer.writerows(output_rows)
-        print(f"Wrote {out_path}", file=sys.stderr)
-    else:
-        writer = csv.writer(sys.stdout)
-        writer.writerow(header)
-        writer.writerows(output_rows)
-
-
-def process_rows(rows, header_rows, cols, convert_fn):
+def process_rows(rows, header_rows, cols, convert_fn, meter=''):
     """Main processing loop shared by all converters.
 
     Args:
-        rows: all CSV rows
-        header_rows: number of header rows to skip
-        cols: column dict from find_columns
-        convert_fn: function(row, ref, cols) -> (scheme, caesura_str) or None
+        convert_fn: function(row, ref, cols) -> (scheme, caesurae_list) or None
 
-    Returns (output_rows, skipped_count).
+    Returns (verse_dicts, skipped_count).
+    Each verse dict has: epigram, verse, text, scheme, caesurae, meter,
+    syllables, quantities (the last two are pre-parsed).
     """
     text_col = cols['text']
     epigram_col = cols.get('epigram')
     verse_col = cols.get('verse_num')
-    output_rows = []
+    verses = []
     skipped = 0
 
     for i in range(header_rows, len(rows)):
@@ -160,16 +230,33 @@ def process_rows(rows, header_rows, cols, convert_fn):
 
         epigram = row[epigram_col].strip() if epigram_col and len(row) > epigram_col else ''
         verse = row[verse_col].strip() if verse_col and len(row) > verse_col else ''
-        ref = f"{epigram}.{verse}" if epigram and verse else str(len(output_rows) + 1)
+        ref = f"{epigram}.{verse}" if epigram and verse else str(len(verses) + 1)
 
         result = convert_fn(row, ref, cols)
 
         if result is None:
-            output_rows.append([epigram, verse, text, '', ''])
+            verses.append({
+                'epigram': epigram, 'verse': verse, 'text': text,
+                'scheme': '', 'caesurae': [], 'meter': meter,
+                'syllables': None, 'quantities': None,
+            })
             skipped += 1
         else:
-            scheme, caesura_str = result
-            output_rows.append([epigram, verse, text, scheme, caesura_str])
+            scheme, caesurae = result
+            quantities = expand_scheme(scheme)
+            syllables = parse_syllables(text)
+            syllables = merge_syllables(syllables)
+            if len(syllables) != len(quantities):
+                print(f"Warning: [{meter}] {ref}: syllable count mismatch: "
+                      f"text has {len(syllables)}, scheme '{scheme}' "
+                      f"expands to {len(quantities)}", file=sys.stderr)
+                syllables = None
+                quantities = None
+            verses.append({
+                'epigram': epigram, 'verse': verse, 'text': text,
+                'scheme': scheme, 'caesurae': caesurae, 'meter': meter,
+                'syllables': syllables, 'quantities': quantities,
+            })
 
-    print(f"Converted {len(output_rows)} rows, skipped {skipped}", file=sys.stderr)
-    return output_rows, skipped
+    print(f"Converted {len(verses)} rows, skipped {skipped}", file=sys.stderr)
+    return verses, skipped

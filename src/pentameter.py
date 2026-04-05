@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Convert pentameter.csv spreadsheet to annotate.py-compatible CSV.
+"""Elegiac pentameter spreadsheet converter.
 
 Pentameter scheme format: "DS_ ‖ DD_" or "DD_ ‖ DDÈ"
 Each hemistich: 1-2 feet (D/S) + anceps (_ = long, È = short)
@@ -7,14 +6,13 @@ The ‖ marks the caesura.
 """
 
 import sys
-from common import FOOT_SIZE, find_columns, parse_args, read_csv, write_csv, process_rows
+from common import FOOT_SIZE, find_columns, read_csv, process_rows
 
 HEADER_ROWS = 3
 
 
-
 def parse_pent_scheme(scheme_raw):
-    """Convert pentameter scheme to annotate.py format.
+    """Convert pentameter scheme to internal format.
 
     Returns (scheme_string, caesura_position) or (None, None).
     """
@@ -57,18 +55,14 @@ def convert_verse(row, ref, cols):
         print(f"Warning: {ref}: unparseable scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
-    caesura_str = str(caesura) if caesura else ''
-    return our_scheme, caesura_str
+    caesurae = [caesura] if caesura else []
+    return our_scheme, caesurae
 
 
-def main():
-    in_path, out_path = parse_args("Convert pentameter.csv to annotate CSV")
-    rows = read_csv(in_path)
+def load(csv_path):
+    """Load pentameter verses from spreadsheet. Returns verse dicts."""
+    rows = read_csv(csv_path)
     cols = find_columns(rows, HEADER_ROWS)
     print(f"Detected columns: {cols}", file=sys.stderr)
-    output_rows, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse)
-    write_csv(output_rows, out_path)
-
-
-if __name__ == '__main__':
-    main()
+    verses, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse, meter='Pentameter')
+    return verses

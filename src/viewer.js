@@ -17,7 +17,8 @@ function feet() {
   $$('.footend').forEach(function(el) { el.style.borderRight = ''; });
   if (document.getElementById('feet_box').checked) {
     $$('.selected .footend').forEach(function(el) {
-      el.style.borderRight = '2px dashed blue';
+      var isDiaeresis = el.classList.contains('wordend');
+      el.style.borderRight = isDiaeresis ? '2px solid blue' : '2px dashed blue';
     });
   }
 }

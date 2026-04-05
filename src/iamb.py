@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-"""Convert iamb.csv spreadsheet to annotate.py-compatible CSV."""
+"""Iambic trimeter spreadsheet converter."""
 
 import sys
-from common import parse_scheme, find_columns, parse_args, read_csv, write_csv, process_rows
+from common import parse_scheme, find_columns, read_csv, process_rows
 
 HEADER_ROWS = 3
 
@@ -20,25 +19,20 @@ def convert_verse(row, ref, cols):
         print(f"Warning: {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
-    # Caesura column
-    caesura_str = ''
+    caesurae = []
     col_idx = cols.get('caesura')
     if col_idx is not None:
         val = row[col_idx].strip() if len(row) > col_idx else ''
         if val.isdigit() and int(val) <= 12:
-            caesura_str = val
+            caesurae = [int(val)]
 
-    return our_scheme, caesura_str
+    return our_scheme, caesurae
 
 
-def main():
-    in_path, out_path = parse_args("Convert iamb.csv to annotate CSV")
-    rows = read_csv(in_path)
+def load(csv_path):
+    """Load iambic verses from spreadsheet. Returns verse dicts."""
+    rows = read_csv(csv_path)
     cols = find_columns(rows, HEADER_ROWS)
     print(f"Detected columns: {cols}", file=sys.stderr)
-    output_rows, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse)
-    write_csv(output_rows, out_path)
-
-
-if __name__ == '__main__':
-    main()
+    verses, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse, meter='Iamb')
+    return verses
