@@ -2,16 +2,10 @@
 """Convert hex.csv spreadsheet to annotate.py-compatible CSV."""
 
 import sys
-from common import FOOT_MAP, find_columns, convert_feet, parse_args, read_csv, write_csv, process_rows
+from common import FOOT_SIZE, parse_scheme, find_columns, parse_args, read_csv, write_csv, process_rows
 
-FOOT_SIZE = {'D': 3, 'd': 2, 'T': 2, 'I': 2, 'C': 3, 'B': 3, 'b': 3}
-
-# Hexameter: spondee replacing dactyl = 'd'
-HEX_FOOT_MAP = dict(FOOT_MAP)
-HEX_FOOT_MAP['S'] = 'd'
-
-HEADER_ROWS = 3
 NUM_FEET = 6
+HEADER_ROWS = 3
 
 
 def pick_caesurae(row, our_scheme, cols):
@@ -57,17 +51,17 @@ def pick_caesurae(row, our_scheme, cols):
     return sorted(positions)
 
 
-def convert_verse(row, verse_num, cols):
+def convert_verse(row, ref, cols):
     scheme_col = cols.get('scheme')
     scheme_raw = row[scheme_col].strip() if scheme_col and len(row) > scheme_col else ''
 
     if not scheme_raw:
-        print(f"Warning: verse {verse_num}: no scheme", file=sys.stderr)
+        print(f"Warning: {ref}: no scheme", file=sys.stderr)
         return None
 
-    our_scheme = convert_feet(row, cols, HEX_FOOT_MAP, NUM_FEET)
+    our_scheme = parse_scheme(scheme_raw, num_feet=NUM_FEET)
     if our_scheme is None:
-        print(f"Warning: verse {verse_num}: unrecognized feet in scheme '{scheme_raw}'", file=sys.stderr)
+        print(f"Warning: {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
     caesurae = pick_caesurae(row, our_scheme, cols)

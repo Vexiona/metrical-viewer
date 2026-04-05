@@ -7,11 +7,10 @@ The ‖ marks the caesura.
 """
 
 import sys
-from common import find_columns, parse_args, read_csv, write_csv, process_rows
-
-FOOT_SIZE = {'D': 3, 'S': 2}
+from common import FOOT_SIZE, find_columns, parse_args, read_csv, write_csv, process_rows
 
 HEADER_ROWS = 3
+
 
 
 def parse_pent_scheme(scheme_raw):
@@ -45,17 +44,17 @@ def parse_pent_scheme(scheme_raw):
     return ''.join(our_scheme), caesura_pos
 
 
-def convert_verse(row, verse_num, cols):
+def convert_verse(row, ref, cols):
     scheme_col = cols.get('scheme')
     scheme_raw = row[scheme_col].strip() if scheme_col and len(row) > scheme_col else ''
 
     if not scheme_raw:
-        print(f"Warning: verse {verse_num}: no scheme", file=sys.stderr)
+        print(f"Warning: {ref}: no scheme", file=sys.stderr)
         return None
 
     our_scheme, caesura = parse_pent_scheme(scheme_raw)
     if our_scheme is None:
-        print(f"Warning: verse {verse_num}: unparseable scheme '{scheme_raw}'", file=sys.stderr)
+        print(f"Warning: {ref}: unparseable scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
     caesura_str = str(caesura) if caesura else ''

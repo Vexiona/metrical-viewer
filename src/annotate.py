@@ -18,7 +18,6 @@ FEET = {
     'S': ['long', 'long'],              # Spondee
     'I': ['short', 'long'],             # Iamb
     'D': ['long', 'short', 'short'],    # Dactyl
-    'd': ['long', 'long'],              # Contracted dactyl (spondee in hexameter)
     'T': ['long', 'short'],             # Trochee
     'A': ['short', 'short', 'long'],    # Anapest
     'P': ['short', 'short'],             # Pyrrhic
@@ -31,9 +30,9 @@ FEET = {
 
 # Standard feet per meter (anything else gets warning style)
 STANDARD = {
-    'Hexameter': set('DdT'),
+    'Hexameter': set('DST'),
     'Iamb': set('SIP'),
-    'Pentameter': set('DSdle'),
+    'Pentameter': set('DSle'),
 }
 
 
@@ -88,13 +87,13 @@ def generate_line(text, scheme, caesurae=None, standard_feet=None, ref=''):
     syllables = parse_syllables(text)
     quantities = expand_scheme(scheme)
 
-    DASHES = set('−–—‒')
+    DASHES = set('―–')
 
     # Try merging elided syllables (ending with ') with the next syllable
     while len(syllables) > len(quantities):
         merged = False
         for i in range(len(syllables) - 1):
-            if syllables[i][0].endswith(('\u2019', "'", '\u02BC', '\u1FBD')):
+            if "'" in syllables[i][0]:
                 merged_text = syllables[i][0] + '\u00a0' + syllables[i + 1][0]
                 merged_wordend = syllables[i + 1][1]
                 syllables = syllables[:i] + [(merged_text, merged_wordend)] + syllables[i + 2:]
@@ -184,14 +183,14 @@ def read_verses(csv_path, label=''):
             if not scheme:
                 raw = text.replace('#', '').replace('  ', ' ')
                 html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
-                print(f"Warning: {tag}verse {verse_num}: no scheme", file=sys.stderr)
+                print(f"Warning: {tag}{ref}: no scheme", file=sys.stderr)
             else:
                 try:
                     html = generate_line(text, scheme, caesurae, std, ref)
                 except ValueError as e:
                     raw = text.replace('#', '').replace('  ', ' ')
                     html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
-                    print(f"Warning: {tag}verse {verse_num}: {e}", file=sys.stderr)
+                    print(f"Warning: {tag}{ref}: {e}", file=sys.stderr)
 
             verses.append({
                 'epigram': ep_num,

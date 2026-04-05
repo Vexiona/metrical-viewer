@@ -3,10 +3,11 @@
 import csv
 import sys
 
-# Master foot map — all known foot tokens across all meters
-FOOT_MAP = {
+# All known foot tokens across all meters.
+# Maps spreadsheet token -> annotate.py code.
+FOOT_TOKENS = {
     'D': 'D',       # Dactyl
-    'S': 'S',       # Spondee (code may be remapped per meter)
+    'S': 'S',       # Spondee
     'T': 'T',       # Trochee
     'I': 'I',       # Iamb
     'P': 'P',       # Pyrrhic
@@ -16,21 +17,66 @@ FOOT_MAP = {
     'Tb': 'b',      # Tribrach
 }
 
+# Sorted longest-first for greedy matching
+_TOKENS_BY_LENGTH = sorted(FOOT_TOKENS, key=len, reverse=True)
+
+# Syllable count per annotate.py foot code
+FOOT_SIZE = {
+    'D': 3, 'S': 2, 'T': 2, 'I': 2,
+    'A': 3, 'C': 3, 'B': 3, 'b': 3, 'P': 2,
+}
+
+
+def parse_scheme(scheme_raw, num_feet=None):
+    """Parse a scheme string into annotate.py format.
+
+    Args:
+        scheme_raw: scheme string from spreadsheet (e.g. 'DSDDDT', 'SApIApII')
+        num_feet: if set, reject schemes that don't have exactly this many feet
+
+    Returns annotate.py scheme string or None on failure.
+    """
+    result = []
+    s = scheme_raw.strip()
+    i = 0
+    while i < len(s):
+        if s[i] == ' ':
+            i += 1
+            continue
+        matched = False
+        for tok in _TOKENS_BY_LENGTH:
+            if s[i:i+len(tok)] == tok:
+                result.append(FOOT_TOKENS[tok])
+                i += len(tok)
+                matched = True
+                break
+        if not matched:
+            return None
+    if not result:
+        return None
+    if num_feet is not None and len(result) != num_feet:
+        return None
+    return ''.join(result)
+
 
 def find_columns(rows, header_rows=3):
     """Auto-detect column indices by scanning header rows and first data row.
 
-    Returns dict with keys: text, scheme, feet_start, and any caesura columns found.
+    Returns dict with keys: text, scheme, epigram, verse_num, and any caesura columns found.
     """
     cols = {}
 
     for i in range(min(header_rows, len(rows))):
         for j, val in enumerate(rows[i]):
-            v = val.strip().lower()
-            if (v == 'schemă' or v.startswith('schemă')) and 'scheme' not in cols:
+            v = ' '.join(val.strip().lower().split())
+            if v == 'metrical pattern' and 'scheme' not in cols:
                 cols['scheme'] = j
-            elif v == 'cezuri' or v == 'caesura':
+            elif v == 'caesura':
                 cols['caesura'] = j
+            elif v == 'epigramme no.' and 'epigram' not in cols:
+                cols['epigram'] = j
+            elif v == 'verse no.' and 'verse_num' not in cols:
+                cols['verse_num'] = j
             # Functional caesurae (hexameter)
             elif v == 'triem' and 'func_triem' not in cols:
                 cols['func_triem'] = j
@@ -38,7 +84,7 @@ def find_columns(rows, header_rows=3):
                 cols['func_penth'] = j
             elif v == 'hephth' and 'func_hephth' not in cols:
                 cols['func_hephth'] = j
-            elif v == 'bucolică' or v.startswith('bucolic'):
+            elif v.startswith('bucolic'):
                 cols['func_bucolic'] = j
 
     # Syllabified text: find the column with # markers in first data row
@@ -51,78 +97,7 @@ def find_columns(rows, header_rows=3):
     if 'text' not in cols:
         cols['text'] = 1
 
-    # Epigram and verse number columns
-    for i in range(min(header_rows, len(rows))):
-        for j, val in enumerate(rows[i]):
-            # Normalize: collapse whitespace/newlines
-            v = ' '.join(val.strip().lower().split())
-            if v in ('epigr.', 'epigramă', 'ep.') and 'epigram' not in cols:
-                cols['epigram'] = j
-            elif v in ('nr. vers', 'nr vers') and 'verse_num' not in cols:
-                cols['verse_num'] = j
-    # Fallback: check for 'vers' in col 6+ area
-    if 'verse_num' not in cols:
-        for i in range(min(header_rows, len(rows))):
-            for j, val in enumerate(rows[i]):
-                v = ' '.join(val.strip().lower().split())
-                if v == 'vers' and j >= 5:
-                    cols['verse_num'] = j
-                    break
-
-    # Individual feet columns: look for known foot tokens after the scheme column
-    if 'scheme' in cols and len(rows) > header_rows:
-        sc = cols['scheme']
-        data_row = rows[header_rows]
-        for j in range(sc + 1, min(sc + 10, len(data_row))):
-            val = data_row[j].strip()
-            if val in FOOT_MAP:
-                cols['feet_start'] = j
-                break
-
     return cols
-
-
-def convert_feet(row, cols, foot_map, num_feet):
-    """Read feet from individual columns.
-
-    Args:
-        row: CSV row
-        cols: column dict from find_columns
-        foot_map: dict mapping spreadsheet tokens to annotate.py codes
-        num_feet: expected number of feet
-
-    Returns annotate.py scheme string or None on failure.
-    """
-    if 'feet_start' not in cols:
-        return None
-
-    feet_start = cols['feet_start']
-    feet = []
-    for j in range(feet_start, feet_start + num_feet):
-        tok = row[j].strip() if len(row) > j else ''
-        if not tok:
-            continue
-        code = foot_map.get(tok)
-        if code is None:
-            return None
-        feet.append(code)
-
-    if len(feet) == num_feet:
-        return ''.join(feet)
-
-    # Fallback: if one foot short, try last char of scheme string
-    if len(feet) == num_feet - 1 and 'scheme' in cols:
-        scheme_raw = row[cols['scheme']].strip().replace('Τ', 'T').replace('τ', 'T').replace(' ', '')
-        if scheme_raw:
-            last = scheme_raw[-1]
-            code = foot_map.get(last)
-            if code:
-                feet.append(code)
-
-    if len(feet) != num_feet:
-        return None
-
-    return ''.join(feet)
 
 
 def parse_args(description):
@@ -167,7 +142,7 @@ def process_rows(rows, header_rows, cols, convert_fn):
         rows: all CSV rows
         header_rows: number of header rows to skip
         cols: column dict from find_columns
-        convert_fn: function(row, verse_num, cols) -> (scheme, caesura_str) or None
+        convert_fn: function(row, ref, cols) -> (scheme, caesura_str) or None
 
     Returns (output_rows, skipped_count).
     """
@@ -185,9 +160,9 @@ def process_rows(rows, header_rows, cols, convert_fn):
 
         epigram = row[epigram_col].strip() if epigram_col and len(row) > epigram_col else ''
         verse = row[verse_col].strip() if verse_col and len(row) > verse_col else ''
+        ref = f"{epigram}.{verse}" if epigram and verse else str(len(output_rows) + 1)
 
-        verse_num = len(output_rows) + 1
-        result = convert_fn(row, verse_num, cols)
+        result = convert_fn(row, ref, cols)
 
         if result is None:
             output_rows.append([epigram, verse, text, '', ''])
