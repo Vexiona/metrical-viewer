@@ -125,7 +125,7 @@ body {
   border-radius: 0 0 50% 50%;
 }
 
-.selected .bridge::before {
+.selected .bridge.show-bridge::before {
   content: "";
   position: absolute;
   top: -0.15em;
@@ -141,11 +141,11 @@ body {
 .selected .homodynia::before {
   content: "\2022";
   position: absolute;
-  top: -0.55em;
+  top: -0.85em;
   left: 50%;
   transform: translateX(-50%);
   color: #c44;
-  font-size: 0.7em;
+  font-size: 0.9em;
   display: none;
 }
 

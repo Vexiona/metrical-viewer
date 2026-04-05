@@ -32,6 +32,7 @@ function diaereses() {
 
 function bridges() {
   $$('.bridge').forEach(function(el) {
+    el.classList.remove('show-bridge');
     el.style.removeProperty('--bridge-w');
     el.style.removeProperty('--bridge-l');
   });
@@ -43,6 +44,7 @@ function bridges() {
         var mid2 = next.offsetLeft + next.offsetWidth / 2;
         el.style.setProperty('--bridge-w', (mid2 - mid1) + 'px');
         el.style.setProperty('--bridge-l', (el.offsetWidth / 2) + 'px');
+        el.classList.add('show-bridge');
       }
     });
   }
