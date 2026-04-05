@@ -71,6 +71,10 @@ body {
   margin-left: 20px;
 }
 
+.line.pent .ref {
+  margin-right: 2.4em;
+}
+
 .ref {
   display: inline-block;
   min-width: 3.5em;

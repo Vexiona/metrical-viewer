@@ -74,7 +74,7 @@ def expand_scheme(scheme):
     return result
 
 
-def generate_line(text, scheme, caesurae=None, standard_feet=None, ref=''):
+def generate_line(text, scheme, caesurae=None, standard_feet=None, ref='', line_class='line'):
     """Generate one <div class="line"> from annotated input.
 
     Args:
@@ -147,7 +147,7 @@ def generate_line(text, scheme, caesurae=None, standard_feet=None, ref=''):
         lines.append(f'{prefix}<span class="{cls}">{syl_text}</span{suffix}')
 
     inner = '\n'.join(lines)
-    line_classes = 'line'
+    line_classes = line_class
     if standard_feet is not None and any(c not in standard_feet for c in scheme):
         line_classes += ' nonstandard'
     ref_span = f'<span class="ref">{ref}</span>' if ref else ''
@@ -187,7 +187,8 @@ def read_verses(csv_path, label=''):
                 print(f"Warning: {tag}{full_ref}: no scheme", file=sys.stderr)
             else:
                 try:
-                    html = generate_line(text, scheme, caesurae, std, ref)
+                    lc = 'line pent' if label == 'Pentameter' else 'line'
+                    html = generate_line(text, scheme, caesurae, std, ref, lc)
                 except ValueError as e:
                     raw = text.replace('#', '').replace('  ', ' ')
                     html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
