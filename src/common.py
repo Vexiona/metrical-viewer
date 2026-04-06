@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Ioan Andrei Nicolae
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Shared utilities for spreadsheet parsing and verse annotation."""
 
 import csv

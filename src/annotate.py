@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Ioan Andrei Nicolae
+# SPDX-License-Identifier: GPL-3.0-only
+
 """HTML generation from pre-parsed verse data."""
 
 from pathlib import Path

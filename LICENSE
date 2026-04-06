@@ -1,0 +1,14 @@
+This project is dual-licensed:
+
+Data and Text (data/)
+---------------------
+Copyright (C) 2026 Simona Nicolae
+Licensed under the Creative Commons Attribution-NonCommercial-ShareAlike
+4.0 International License (CC BY-NC-SA 4.0).
+See LICENSE-DATA for the full license text.
+
+Code (src/, Makefile)
+---------------------
+Copyright (C) 2026 Ioan Andrei Nicolae
+Licensed under the GNU General Public License v3.0 (GPLv3).
+See LICENSE-CODE for the full license text.

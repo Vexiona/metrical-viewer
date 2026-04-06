@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 Ioan Andrei Nicolae
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Build the metrical viewer HTML from source spreadsheets.
 
 Usage:

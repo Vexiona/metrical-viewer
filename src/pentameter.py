@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Ioan Andrei Nicolae
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Elegiac pentameter spreadsheet converter.
 
 Pentameter scheme format: "DS_ ‖ DD_" or "DD_ ‖ DDÈ"

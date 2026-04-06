@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Ioan Andrei Nicolae
+// SPDX-License-Identifier: GPL-3.0-only
+
 var $$ = function(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); };
 
 function setStyle(sel, prop, val) {
