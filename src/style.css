@@ -149,6 +149,7 @@ body {
 :is(.selected, .expanded) .long {
   display: inline-block;
   padding-bottom: 0.35em;
+  margin-right: 1px;
   text-align: center;
   position: relative;
 }

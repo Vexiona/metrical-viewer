@@ -161,8 +161,33 @@ def verify_diaereses(verses, rows, header_rows, cols):
                 print(f"Warning: [Hexameter] {ref}: diaeresis D{foot} in text but not in spreadsheet", file=sys.stderr)
 
 
+def compute_met_caesura_positions(scheme, syllables):
+    """Compute all metrical caesura positions from text.
+
+    Checks feet 1-4 for word boundaries at M (after 1st syllable) and F
+    (after 2nd syllable of trisyllabic feet) positions.
+    Returns set of 1-based syllable positions.
+    """
+    positions = set()
+    syl_pos = 0
+    for foot in range(min(4, len(scheme))):
+        code = scheme[foot]
+        size = FOOT_SIZE.get(code, 0)
+        # M: after 1st syllable
+        m_pos = syl_pos + 1
+        if m_pos - 1 < len(syllables) and syllables[m_pos - 1][1]:
+            positions.add(m_pos)
+        # F: after 2nd syllable (trisyllabic feet)
+        if size >= 3:
+            f_pos = syl_pos + 2
+            if f_pos - 1 < len(syllables) and syllables[f_pos - 1][1]:
+                positions.add(f_pos)
+        syl_pos += size
+    return positions
+
+
 def verify_met_caesurae(verses, cols):
-    """Check that spreadsheet metrical caesura positions have word boundaries."""
+    """Compare spreadsheet metrical caesurae with computed positions."""
     has_met_cols = any(k.startswith('met_') for k in cols)
     if not has_met_cols:
         return
@@ -171,11 +196,16 @@ def verify_met_caesurae(verses, cols):
         if v['syllables'] is None or not v['scheme']:
             continue
         ref = f"{v['epigram']}.{v['verse']}"
-        syllables = v['syllables']
-        for pos in v.get('met_caesurae', []):
-            if pos - 1 < len(syllables) and not syllables[pos - 1][1]:
-                print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
-                      f"but no word boundary in text", file=sys.stderr)
+        csv_set = set(v.get('met_caesurae', []))
+        computed = compute_met_caesura_positions(v['scheme'], v['syllables'])
+        csv_only = csv_set - computed
+        comp_only = computed - csv_set
+        for pos in sorted(csv_only):
+            print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
+                  f"in spreadsheet but not in text", file=sys.stderr)
+        for pos in sorted(comp_only):
+            print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
+                  f"in text but not in spreadsheet", file=sys.stderr)
 
 
 def load(csv_path):

@@ -329,7 +329,7 @@ def find_columns(rows, header_rows=3):
                 cols['bridge_naeke'] = j
             elif v.startswith('hilberg') and 'bridge_hilberg' not in cols:
                 cols['bridge_hilberg'] = j
-            elif v == 'triemim' and 'met_triem' not in cols:
+            elif v == 'trihemim' and 'met_triem' not in cols:
                 cols['met_triem'] = j
             elif v == 'penthem' and 'met_penth' not in cols:
                 cols['met_penth'] = j
