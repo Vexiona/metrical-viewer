@@ -77,6 +77,7 @@ def parse_syllables(text):
             syllables.append((''.join(current), False))
             current = []
         elif ch == ' ':
+            current.append('\u00a0')
             syllables.append((''.join(current), True))
             current = []
         else:
@@ -99,7 +100,7 @@ def merge_syllables(syllables):
         syl = syllables[i][0]
         apos = syl.find("'")
         if apos > 0 and syl[apos - 1].lower() not in GREEK_VOWELS:
-            merged_text = syl + '\u00a0' + syllables[i + 1][0]
+            merged_text = syl + syllables[i + 1][0]
             merged_wordend = syllables[i + 1][1]
             syllables = syllables[:i] + [(merged_text, merged_wordend)] + syllables[i + 2:]
         i += 1

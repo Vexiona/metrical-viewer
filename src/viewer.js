@@ -4,27 +4,55 @@ function setStyle(sel, prop, val) {
   $$(sel).forEach(function(el) { el.style[prop] = val; });
 }
 
+function toggleState(id) {
+  return parseInt(document.getElementById(id).dataset.state || '0');
+}
+
+function scope(state) {
+  if (state === 2) return '';
+  if (state === 1) return '.selected ';
+  return null;
+}
+
+/* Overlays that need expanded syllable layout to render properly */
+var EXPAND_TOGGLES = ['scansion_box', 'colors_box', 'bridges_box', 'homodynia_box',
+                      'caesura_box', 'feet_box', 'diaeresis_box'];
+
+function updateExpanded() {
+  var needsExpand = EXPAND_TOGGLES.some(function(id) { return toggleState(id) === 2; });
+  $$('.line').forEach(function(el) {
+    if (needsExpand) {
+      el.classList.add('expanded');
+    } else {
+      el.classList.remove('expanded');
+    }
+  });
+}
+
 function colors() {
   setStyle('.short', 'backgroundColor', '');
   setStyle('.long', 'backgroundColor', '');
-  if (document.getElementById('colors_box').checked) {
-    setStyle('.selected .short', 'backgroundColor', '#DDD5EB');
-    setStyle('.selected .long', 'backgroundColor', '#C8DCCB');
+  var s = scope(toggleState('colors_box'));
+  if (s !== null) {
+    setStyle(s + '.short', 'backgroundColor', '#DDD5EB');
+    setStyle(s + '.long', 'backgroundColor', '#C8DCCB');
   }
 }
 
 function feet() {
   $$('.footend').forEach(function(el) { el.style.borderRight = ''; });
-  if (document.getElementById('feet_box').checked) {
-    $$('.selected .footend').forEach(function(el) {
+  var s = scope(toggleState('feet_box'));
+  if (s !== null) {
+    $$(s + '.footend').forEach(function(el) {
       el.style.borderRight = '2px dashed blue';
     });
   }
 }
 
 function diaereses() {
-  if (document.getElementById('diaeresis_box').checked) {
-    $$('.selected .diaeresis').forEach(function(el) {
+  var s = scope(toggleState('diaeresis_box'));
+  if (s !== null) {
+    $$(s + '.diaeresis').forEach(function(el) {
       el.style.borderRight = '2px solid blue';
     });
   }
@@ -36,8 +64,9 @@ function bridges() {
     el.style.removeProperty('--bridge-w');
     el.style.removeProperty('--bridge-l');
   });
-  if (document.getElementById('bridges_box').checked) {
-    $$('.selected .bridge').forEach(function(el) {
+  var s = scope(toggleState('bridges_box'));
+  if (s !== null) {
+    $$(s + '.bridge').forEach(function(el) {
       var next = el.nextElementSibling;
       if (next) {
         var mid1 = el.offsetLeft + el.offsetWidth / 2;
@@ -52,8 +81,9 @@ function bridges() {
 
 function homodynia() {
   $$('.homodynia').forEach(function(el) { el.classList.remove('show-homodynia'); });
-  if (document.getElementById('homodynia_box').checked) {
-    $$('.selected .homodynia').forEach(function(el) {
+  var s = scope(toggleState('homodynia_box'));
+  if (s !== null) {
+    $$(s + '.homodynia').forEach(function(el) {
       el.classList.add('show-homodynia');
     });
   }
@@ -68,8 +98,9 @@ function caesura() {
       next.style.marginLeft = '';
     }
   });
-  if (document.getElementById('caesura_box').checked) {
-    $$('.selected .met-caesura').forEach(function(el) {
+  var s = scope(toggleState('caesura_box'));
+  if (s !== null) {
+    $$(s + '.met-caesura').forEach(function(el) {
       var next = el.nextElementSibling;
       if (next) {
         next.style.borderLeft = 'double 3px #999';
@@ -77,7 +108,7 @@ function caesura() {
         next.style.marginLeft = '1px';
       }
     });
-    $$('.selected .caesura').forEach(function(el) {
+    $$(s + '.caesura').forEach(function(el) {
       var next = el.nextElementSibling;
       if (next) {
         next.style.borderLeft = 'double 3px red';
@@ -90,14 +121,16 @@ function caesura() {
 
 function scansion() {
   $$('.short, .long').forEach(function(el) { el.classList.remove('scansion'); });
-  if (document.getElementById('scansion_box').checked) {
-    $$('.selected .short, .selected .long').forEach(function(el) {
+  var s = scope(toggleState('scansion_box'));
+  if (s !== null) {
+    $$(s + '.short, ' + s + '.long').forEach(function(el) {
       el.classList.add('scansion');
     });
   }
 }
 
 function updateVisuals() {
+  updateExpanded();
   scansion(); colors(); caesura(); feet(); diaereses(); bridges(); homodynia();
 }
 
@@ -156,13 +189,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  document.getElementById('colors_box').addEventListener('click', colors);
-  document.getElementById('feet_box').addEventListener('click', function() { feet(); diaereses() });
-  document.getElementById('diaeresis_box').addEventListener('click', function() { feet(); diaereses() });
-  document.getElementById('caesura_box').addEventListener('click', caesura);
-  document.getElementById('scansion_box').addEventListener('click', scansion);
-  document.getElementById('bridges_box').addEventListener('click', bridges);
-  document.getElementById('homodynia_box').addEventListener('click', homodynia);
+  // Main button toggles off (0) <-> selected (1)
+  $$('.toggle-main').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var group = btn.parentElement;
+      var state = parseInt(group.dataset.state || '0');
+      group.dataset.state = (state === 0) ? 1 : 0;
+      updateVisuals();
+    });
+  });
+
+  // Small "all" button toggles between current state and all (2)
+  $$('.toggle-all').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var group = btn.parentElement;
+      var state = parseInt(group.dataset.state || '0');
+      group.dataset.state = (state === 2) ? 1 : 2;
+      updateVisuals();
+    });
+  });
 
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;

@@ -161,6 +161,23 @@ def verify_diaereses(verses, rows, header_rows, cols):
                 print(f"Warning: [Hexameter] {ref}: diaeresis D{foot} in text but not in spreadsheet", file=sys.stderr)
 
 
+def verify_met_caesurae(verses, cols):
+    """Check that spreadsheet metrical caesura positions have word boundaries."""
+    has_met_cols = any(k.startswith('met_') for k in cols)
+    if not has_met_cols:
+        return
+
+    for v in verses:
+        if v['syllables'] is None or not v['scheme']:
+            continue
+        ref = f"{v['epigram']}.{v['verse']}"
+        syllables = v['syllables']
+        for pos in v.get('met_caesurae', []):
+            if pos - 1 < len(syllables) and not syllables[pos - 1][1]:
+                print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
+                      f"but no word boundary in text", file=sys.stderr)
+
+
 def load(csv_path):
     """Load hexameter verses from spreadsheet. Returns verse dicts."""
     rows = read_csv(csv_path)
@@ -188,4 +205,5 @@ def load(csv_path):
     verify_bridges(verses, rows, HEADER_ROWS, cols, 'Hexameter',
                    ['meyer', 'hermann', 'naeke', 'hilberg'])
     verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Hexameter')
+    verify_met_caesurae(verses, cols)
     return verses

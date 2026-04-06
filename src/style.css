@@ -23,22 +23,66 @@ body {
   display: flex;
   gap: 1.2em;
   justify-content: center;
+  flex-wrap: wrap;
   border-bottom: 1px solid #ccc;
   flex-shrink: 0;
 }
 
-#buttons label {
-  font-family: system-ui, sans-serif;
-  font-size: 0.85em;
-  color: #444;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
+#buttons .btn-group {
+  display: inline-flex;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #aab;
 }
 
-#buttons input[type="checkbox"] {
-  accent-color: #667;
+#buttons .btn-group[data-state="1"] {
+  border-color: #889;
+}
+
+#buttons .btn-group[data-state="2"] {
+  border-color: #445;
+}
+
+#buttons .toggle-main,
+#buttons .toggle-all {
+  font-family: system-ui, sans-serif;
+  cursor: pointer;
+  border: none;
+  background: #fff;
+  color: #999;
+}
+
+#buttons .toggle-main {
+  font-size: 0.85em;
+  padding: 0.2em 0.5em 0.2em 0.6em;
+}
+
+#buttons .toggle-all {
+  font-size: 0.7em;
+  padding: 0.2em 0.4em;
+  border-left: 1px solid #ccc;
+}
+
+#buttons .btn-group[data-state="1"] .toggle-main {
+  background: #e0e4ea;
+  color: #333;
+}
+
+#buttons .btn-group[data-state="1"] .toggle-all {
+  background: #d4d8de;
+  color: #666;
+  border-left-color: #aab;
+}
+
+#buttons .btn-group[data-state="2"] .toggle-main {
+  background: #667;
+  color: #fff;
+}
+
+#buttons .btn-group[data-state="2"] .toggle-all {
+  background: #556;
+  color: #fff;
+  border-left-color: #445;
 }
 
 .greektext {
@@ -86,36 +130,44 @@ body {
   text-align: right;
 }
 
-.selected {
+.ref::before {
+  content: "\00a0\00a0\00a0";
+}
+
+.selected .ref::before {
+  content: "→\00a0";
+  color: #c44;
+  font-size: 1.2em;
+}
+
+:is(.selected, .expanded) {
   line-height: 200%;
   white-space: nowrap;
 }
 
-.selected .short,
-.selected .long {
+:is(.selected, .expanded) .short,
+:is(.selected, .expanded) .long {
   display: inline-block;
-  min-width: 1em;
   padding-bottom: 0.35em;
-  margin-right: 1px;
   text-align: center;
   position: relative;
 }
 
-.selected .short.scansion::after,
-.selected .long.scansion::after {
+:is(.selected, .expanded) .short.scansion::after,
+:is(.selected, .expanded) .long.scansion::after {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.selected .long.scansion::after {
+:is(.selected, .expanded) .long.scansion::after {
   content: "";
   width: 0.6em;
   bottom: 0.1em;
   border-top: 2px solid #000;
 }
 
-.selected .short.scansion::after {
+:is(.selected, .expanded) .short.scansion::after {
   content: "";
   width: 0.55em;
   height: 0.15em;
@@ -125,7 +177,7 @@ body {
   border-radius: 0 0 50% 50%;
 }
 
-.selected .bridge.show-bridge::before {
+:is(.selected, .expanded) .bridge.show-bridge::before {
   content: "";
   position: absolute;
   top: -0.15em;
@@ -138,7 +190,7 @@ body {
   z-index: 1;
 }
 
-.selected .homodynia::before {
+:is(.selected, .expanded) .homodynia::before {
   content: "\2022";
   position: absolute;
   top: -0.85em;
@@ -149,13 +201,10 @@ body {
   display: none;
 }
 
-.selected .homodynia.show-homodynia::before {
+:is(.selected, .expanded) .homodynia.show-homodynia::before {
   display: block;
 }
 
-.wordend::after {
-  content: "\00a0";
-}
 
 /*
 .error {
