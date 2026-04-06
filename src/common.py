@@ -294,7 +294,7 @@ def find_columns(rows, header_rows=3):
     for i in range(min(header_rows, len(rows))):
         for j, val in enumerate(rows[i]):
             v = ' '.join(val.strip().lower().split())
-            if v == 'metrical pattern' and 'scheme' not in cols:
+            if v.startswith('metrical pattern') and 'scheme' not in cols:
                 cols['scheme'] = j
             elif v == 'caesura':
                 cols['caesura'] = j
@@ -302,6 +302,10 @@ def find_columns(rows, header_rows=3):
                 cols['epigram'] = j
             elif v == 'verse no.' and 'verse_num' not in cols:
                 cols['verse_num'] = j
+            elif v == 'first foot' and 'func_first' not in cols:
+                cols['func_first'] = j
+            elif v == 'first foot' and 'func_first' in cols and 'met_first' not in cols:
+                cols['met_first'] = j
             elif v == 'triem' and 'func_triem' not in cols:
                 cols['func_triem'] = j
             elif v == 'penth' and 'func_penth' not in cols:
@@ -324,6 +328,12 @@ def find_columns(rows, header_rows=3):
                 cols['bridge_naeke'] = j
             elif v.startswith('hilberg') and 'bridge_hilberg' not in cols:
                 cols['bridge_hilberg'] = j
+            elif v == 'triemim' and 'met_triem' not in cols:
+                cols['met_triem'] = j
+            elif v == 'penthem' and 'met_penth' not in cols:
+                cols['met_penth'] = j
+            elif v == 'hephth' and 'func_hephth' in cols and 'met_hephth' not in cols:
+                cols['met_hephth'] = j
             elif v.startswith('homodynia') and 'homodynia' not in cols:
                 cols['homodynia'] = j
 
@@ -381,7 +391,11 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
             })
             skipped += 1
         else:
-            scheme, caesurae = result
+            if len(result) == 3:
+                scheme, caesurae, met_caesurae = result
+            else:
+                scheme, caesurae = result
+                met_caesurae = []
             quantities = expand_scheme(scheme)
             syllables = parse_syllables(text)
             syllables = merge_syllables(syllables)
@@ -393,7 +407,8 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
                 quantities = None
             verses.append({
                 'epigram': epigram, 'verse': verse, 'text': text,
-                'scheme': scheme, 'caesurae': caesurae, 'meter': meter,
+                'scheme': scheme, 'caesurae': caesurae, 'met_caesurae': met_caesurae,
+                'meter': meter,
                 'syllables': syllables, 'quantities': quantities,
             })
 

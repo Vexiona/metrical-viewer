@@ -60,7 +60,7 @@ function homodynia() {
 }
 
 function caesura() {
-  $$('.caesura').forEach(function(el) {
+  $$('.caesura, .met-caesura').forEach(function(el) {
     var next = el.nextElementSibling;
     if (next) {
       next.style.borderLeft = '';
@@ -69,6 +69,14 @@ function caesura() {
     }
   });
   if (document.getElementById('caesura_box').checked) {
+    $$('.selected .met-caesura').forEach(function(el) {
+      var next = el.nextElementSibling;
+      if (next) {
+        next.style.borderLeft = 'double 3px #999';
+        next.style.paddingLeft = '1px';
+        next.style.marginLeft = '1px';
+      }
+    });
     $$('.selected .caesura').forEach(function(el) {
       var next = el.nextElementSibling;
       if (next) {

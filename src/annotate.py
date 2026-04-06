@@ -16,6 +16,7 @@ def generate_line(v):
     scheme = v['scheme']
     meter = v['meter']
     caesurae = v.get('caesurae', [])
+    met_caesurae = v.get('met_caesurae', [])
     bridge_positions = set(v.get('bridges', {}).values())
     homodynia_feet = set(v.get('homodynia', []))
     ictus_pos = v.get('_ictus_positions', {})
@@ -41,6 +42,8 @@ def generate_line(v):
                 classes.append('diaeresis')
         if i + 1 in caesurae:
             classes.append('caesura')
+        if i + 1 in met_caesurae:
+            classes.append('met-caesura')
         if i in bridge_positions:
             classes.append('bridge')
         if i in homodynia_syls:

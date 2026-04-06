@@ -9,8 +9,8 @@ NUM_FEET = 6
 HEADER_ROWS = 3
 
 
-def pick_caesurae(row, our_scheme, cols):
-    """Collect all functional caesurae.
+def pick_caesurae(row, our_scheme, cols, prefix='func'):
+    """Collect caesurae from columns with the given prefix.
 
     M (masculine) = after the 1st syllable of the foot (the thesis/long)
     F (feminine) = after the 2nd syllable of the foot (1st short of dactyl)
@@ -31,23 +31,28 @@ def pick_caesurae(row, our_scheme, cols):
 
     positions = set()
 
-    offset = parse_mf('func_triem')
+    offset = parse_mf(f'{prefix}_first')
+    if offset:
+        positions.add(syll_count(0) + offset)
+
+    offset = parse_mf(f'{prefix}_triem')
     if offset:
         positions.add(syll_count(1) + offset)
 
-    offset = parse_mf('func_penth')
+    offset = parse_mf(f'{prefix}_penth')
     if offset:
         positions.add(syll_count(2) + offset)
 
-    offset = parse_mf('func_hephth')
+    offset = parse_mf(f'{prefix}_hephth')
     if offset:
         positions.add(syll_count(3) + offset)
 
-    col_buc = cols.get('func_bucolic')
-    if col_buc is not None:
-        val = row[col_buc].strip() if len(row) > col_buc else ''
-        if val:
-            positions.add(syll_count(4))
+    if prefix == 'func':
+        col_buc = cols.get('func_bucolic')
+        if col_buc is not None:
+            val = row[col_buc].strip() if len(row) > col_buc else ''
+            if val:
+                positions.add(syll_count(4))
 
     return sorted(positions)
 
@@ -65,8 +70,9 @@ def convert_verse(row, ref, cols):
         print(f"Warning: [Hexameter] {ref}: unrecognized scheme '{scheme_raw}'", file=sys.stderr)
         return None
 
-    caesurae = pick_caesurae(row, our_scheme, cols)
-    return our_scheme, caesurae
+    caesurae = pick_caesurae(row, our_scheme, cols, prefix='func')
+    met_caesurae = pick_caesurae(row, our_scheme, cols, prefix='met')
+    return our_scheme, caesurae, met_caesurae
 
 
 def compute_bridges(scheme, syllables):
