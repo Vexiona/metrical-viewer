@@ -102,15 +102,18 @@ function caesura() {
     }
   });
   var s = scope(toggleState('caesura_box'));
+  var mode = document.getElementById('caesura_box').dataset.mode || 'F';
   if (s !== null) {
-    $$(s + '.met-caesura').forEach(function(el) {
-      var next = el.nextElementSibling;
-      if (next) {
-        next.style.borderLeft = 'double 3px #999';
-        next.style.paddingLeft = '1px';
-        next.style.marginLeft = '1px';
-      }
-    });
+    if (mode === 'M') {
+      $$(s + '.met-caesura').forEach(function(el) {
+        var next = el.nextElementSibling;
+        if (next) {
+          next.style.borderLeft = 'double 3px #999';
+          next.style.paddingLeft = '1px';
+          next.style.marginLeft = '1px';
+        }
+      });
+    }
     $$(s + '.caesura').forEach(function(el) {
       var next = el.nextElementSibling;
       if (next) {
@@ -208,6 +211,17 @@ document.addEventListener('DOMContentLoaded', function() {
       var group = btn.parentElement;
       var state = parseInt(group.dataset.state || '0');
       group.dataset.state = (state === 2) ? 1 : 2;
+      updateVisuals();
+    });
+  });
+
+  // Caesura F/M mode toggle
+  $$('.toggle-mode').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var group = btn.parentElement;
+      group.dataset.mode = btn.dataset.m;
+      $$('.toggle-mode', group).forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
       updateVisuals();
     });
   });

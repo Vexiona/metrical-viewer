@@ -66,6 +66,32 @@ body {
   border-left: 1px solid #ccc;
 }
 
+#buttons .toggle-mode {
+  font-family: system-ui, sans-serif;
+  font-size: 0.65em;
+  padding: 0.2em 0.35em;
+  cursor: pointer;
+  border: none;
+  border-left: 1px solid #ccc;
+  background: #fff;
+  color: #bbb;
+}
+
+#buttons .toggle-mode.active {
+  background: #d4d8de;
+  color: #333;
+}
+
+#buttons .btn-group[data-state="1"] .toggle-mode.active {
+  background: #c8ccd2;
+  color: #333;
+}
+
+#buttons .btn-group[data-state="2"] .toggle-mode.active {
+  background: #556;
+  color: #fff;
+}
+
 #buttons .btn-group[data-state="1"] .toggle-main {
   background: #e0e4ea;
   color: #333;
