@@ -66,7 +66,7 @@ body {
   border-left: 1px solid #ccc;
 }
 
-#buttons .toggle-mode {
+#buttons .toggle-met {
   font-family: system-ui, sans-serif;
   font-size: 0.65em;
   padding: 0.2em 0.35em;
@@ -77,17 +77,17 @@ body {
   color: #bbb;
 }
 
-#buttons .toggle-mode.active {
+#buttons .toggle-met.active {
   background: #d4d8de;
   color: #333;
 }
 
-#buttons .btn-group[data-state="1"] .toggle-mode.active {
+#buttons .btn-group[data-state="1"] .toggle-met.active {
   background: #c8ccd2;
   color: #333;
 }
 
-#buttons .btn-group[data-state="2"] .toggle-mode.active {
+#buttons .btn-group[data-state="2"] .toggle-met.active {
   background: #556;
   color: #fff;
 }
@@ -136,6 +136,12 @@ body {
   font-weight: bold;
   color: #666;
   margin-bottom: 0.2em;
+}
+
+.epigram-type {
+  font-weight: normal;
+  font-size: 0.85em;
+  color: #999;
 }
 
 .line {
@@ -235,6 +241,13 @@ body {
   display: block;
 }
 
+.elision-note {
+  display: none;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75em;
+  color: #c44;
+  margin-left: 1em;
+}
 
 #legend_btn {
   font-family: system-ui, sans-serif;

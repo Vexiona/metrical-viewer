@@ -43,15 +43,22 @@ def generate_line(v):
             classes.append('footend')
             if is_wordend:
                 classes.append('diaeresis')
+        elided = not is_wordend
         if i + 1 in caesurae:
             classes.append('caesura')
+            if elided:
+                classes.append('caesura-elided')
         if i + 1 in met_caesurae:
             classes.append('met-caesura')
+            if elided:
+                classes.append('caesura-elided')
         if i in bridge_positions:
             classes.append('bridge')
         if i in homodynia_syls:
             classes.append('homodynia')
         spans.append((classes, syl_text))
+
+    has_elided = any('caesura-elided' in cls for cls, _ in spans)
 
     lines = []
     for i, (classes, syl_text) in enumerate(spans):
@@ -59,6 +66,9 @@ def generate_line(v):
         prefix = '' if i == 0 else '>'
         suffix = '>' if i == len(spans) - 1 else ''
         lines.append(f'{prefix}<span class="{cls}">{syl_text}</span{suffix}')
+
+    if has_elided:
+        lines.append('<span class="elision-note">elision violates caesura</span>')
 
     inner = '\n'.join(lines)
     ref_span = f'<span class="ref">{ref}</span>' if ref else ''
@@ -88,8 +98,10 @@ def assemble_page(verses):
             if current_ep is not None:
                 parts.append('    </div>')
             ep_display = int(v['_ep_num']) if v['_ep_num'] == int(v['_ep_num']) else v['_ep_num']
+            ep_type = v.get('_ep_type', '')
+            type_label = f' <span class="epigram-type">{ep_type}</span>' if ep_type else ''
             parts.append('    <div class="epigram">')
-            parts.append(f'    <div class="epigram-num"><span class="ref">ep. {ep_display}</span></div>')
+            parts.append(f'    <div class="epigram-num"><span class="ref">ep. {ep_display}</span>{type_label}</div>')
             current_ep = v['_ep_num']
         parts.append(v['_html'])
     if current_ep is not None:

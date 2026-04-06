@@ -340,6 +340,8 @@ def find_columns(rows, header_rows=3):
                 cols['met_hephth'] = j
             elif v.startswith('homodynia') and 'homodynia' not in cols:
                 cols['homodynia'] = j
+            elif ('distich' in v or 'στίχον' in v) and 'verse_type' not in cols:
+                cols['verse_type'] = j
 
     if len(rows) > header_rows:
         data_row = rows[header_rows]
@@ -372,6 +374,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
     text_col = cols['text']
     epigram_col = cols.get('epigram')
     verse_col = cols.get('verse_num')
+    type_col = cols.get('verse_type')
     verses = []
     skipped = 0
 
@@ -383,6 +386,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
 
         epigram = row[epigram_col].strip() if epigram_col and len(row) > epigram_col else ''
         verse = row[verse_col].strip() if verse_col and len(row) > verse_col else ''
+        verse_type = row[type_col].strip() if type_col is not None and len(row) > type_col else ''
         ref = f"{epigram}.{verse}" if epigram and verse else str(len(verses) + 1)
 
         result = convert_fn(row, ref, cols)
@@ -392,6 +396,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
                 'epigram': epigram, 'verse': verse, 'text': text,
                 'scheme': '', 'caesurae': [], 'meter': meter,
                 'syllables': None, 'quantities': None,
+                'verse_type': verse_type,
             })
             skipped += 1
         else:
@@ -414,6 +419,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
                 'scheme': scheme, 'caesurae': caesurae, 'met_caesurae': met_caesurae,
                 'meter': meter,
                 'syllables': syllables, 'quantities': quantities,
+                'verse_type': verse_type,
             })
 
     print(f"Converted {len(verses)} rows, skipped {skipped}", file=sys.stderr)

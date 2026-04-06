@@ -232,8 +232,13 @@ def verify_met_caesurae(verses, cols):
         for pos in sorted(csv_only):
             info = position_to_column(pos, v['scheme'])
             col_hint = f" (column '{info[0]}')" if info else ''
-            print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
-                  f"in spreadsheet but not in text{col_hint}", file=sys.stderr)
+            syllables = v['syllables']
+            if pos - 1 < len(syllables) and not syllables[pos - 1][1]:
+                print(f"Note: [Hexameter] {ref}: metrical caesura at position {pos} "
+                      f"violated by elision{col_hint}", file=sys.stderr)
+            else:
+                print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
+                      f"in spreadsheet but not in text{col_hint}", file=sys.stderr)
         for pos in sorted(comp_only):
             info = position_to_column(pos, v['scheme'])
             if info:
@@ -243,6 +248,28 @@ def verify_met_caesurae(verses, cols):
                 hint = ''
             print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
                   f"in text but not in spreadsheet{hint}", file=sys.stderr)
+
+
+def verify_func_subset_met(verses):
+    """Check that all functional caesurae (feet 1-4) are also marked as metrical."""
+    for v in verses:
+        if not v['scheme']:
+            continue
+        ref = f"{v['epigram']}.{v['verse']}"
+        # Exclude bucolic diaeresis (end of foot 4) — metrical columns only cover caesurae within feet 1-4
+        bucolic_pos = sum(FOOT_SIZE.get(v['scheme'][i], 0) for i in range(min(4, len(v['scheme']))))
+        func_set = {p for p in v.get('caesurae', []) if p != bucolic_pos}
+        met_set = set(v.get('met_caesurae', []))
+        func_only = func_set - met_set
+        for pos in sorted(func_only):
+            info = position_to_column(pos, v['scheme'])
+            if info:
+                col_name, val = info
+                hint = f" → write '{val}' in column '{col_name}'"
+            else:
+                hint = ''
+            print(f"Warning: [Hexameter] {ref}: functional caesura at position {pos} "
+                  f"not marked as metrical{hint}", file=sys.stderr)
 
 
 def load(csv_path):
@@ -273,4 +300,5 @@ def load(csv_path):
                    ['meyer', 'hermann', 'naeke', 'hilberg'])
     verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Hexameter')
     verify_met_caesurae(verses, cols)
+    verify_func_subset_met(verses)
     return verses

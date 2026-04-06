@@ -46,6 +46,40 @@ def main():
 
     all_verses.sort(key=lambda v: (v['_ep_num'], v['_v_num']))
 
+    # Determine epigram type from meters present
+    from collections import defaultdict
+    ep_meters = defaultdict(set)
+    ep_csv_types = defaultdict(set)
+    for v in all_verses:
+        ep = v['_ep_num']
+        ep_meters[ep].add(v['meter'])
+        csv_type = v.get('verse_type', '')
+        if csv_type:
+            ep_csv_types[ep].add(csv_type)
+
+    ep_types = {}
+    for ep, meters in ep_meters.items():
+        if 'Iamb' in meters:
+            ep_types[ep] = 'iamb'
+        elif 'Pentameter' in meters or meters == {'Hexameter', 'Pentameter'}:
+            ep_types[ep] = 'distich'
+        else:
+            ep_types[ep] = 'hexameter'
+
+    # Verify against spreadsheet type column
+    TYPE_ALIASES = {'distih': 'distich', 'hex': 'hexameter', 'hex?': 'hexameter', 'iamb': 'iamb'}
+    for ep, computed in ep_types.items():
+        csv_types = ep_csv_types.get(ep, set())
+        for csv_type in csv_types:
+            csv_norm = TYPE_ALIASES.get(csv_type.lower().strip(), csv_type.lower().strip())
+            if csv_norm != computed:
+                print(f"Warning: epigram {int(ep) if ep == int(ep) else ep}: "
+                      f"computed type '{computed}' but spreadsheet says '{csv_type}'",
+                      file=sys.stderr)
+
+    for v in all_verses:
+        v['_ep_type'] = ep_types.get(v['_ep_num'], '')
+
     # Generate HTML for each verse
     for v in all_verses:
         v['_html'] = verse_to_html(v)
