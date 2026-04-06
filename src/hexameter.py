@@ -19,32 +19,34 @@ def pick_caesurae(row, our_scheme, cols, prefix='func'):
         return sum(FOOT_SIZE.get(our_scheme[i], 0) for i in range(n_feet))
 
     def parse_mf(col_key):
+        """Return list of offsets (1=M, 2=F) from a cell that may have comma-separated values."""
         col_idx = cols.get(col_key)
         if col_idx is None:
-            return 0
+            return []
         val = row[col_idx].strip() if len(row) > col_idx else ''
-        if val.endswith('F'):
-            return 2
-        if val.endswith('M'):
-            return 1
-        return 0
+        if not val:
+            return []
+        offsets = []
+        for part in val.split(','):
+            part = part.strip()
+            if part.endswith('F'):
+                offsets.append(2)
+            elif part.endswith('M'):
+                offsets.append(1)
+        return offsets
 
     positions = set()
 
-    offset = parse_mf(f'{prefix}_first')
-    if offset:
+    for offset in parse_mf(f'{prefix}_first'):
         positions.add(syll_count(0) + offset)
 
-    offset = parse_mf(f'{prefix}_triem')
-    if offset:
+    for offset in parse_mf(f'{prefix}_triem'):
         positions.add(syll_count(1) + offset)
 
-    offset = parse_mf(f'{prefix}_penth')
-    if offset:
+    for offset in parse_mf(f'{prefix}_penth'):
         positions.add(syll_count(2) + offset)
 
-    offset = parse_mf(f'{prefix}_hephth')
-    if offset:
+    for offset in parse_mf(f'{prefix}_hephth'):
         positions.add(syll_count(3) + offset)
 
     if prefix == 'func':
@@ -186,6 +188,30 @@ def compute_met_caesura_positions(scheme, syllables):
     return positions
 
 
+def position_to_column(pos, scheme):
+    """Map a 1-based syllable position to spreadsheet column name and M/F value.
+
+    Returns (column_name, value) like ('trihemim', '3M') or ('penthem', '5F'),
+    or None if the position doesn't correspond to a standard caesura slot.
+    The values use traditional half-foot numbering: 1, 3, 5, 7.
+    """
+    COL_NAMES = ['first foot', 'trihemim', 'penthem', 'hephth']
+    HALF_FEET = [1, 3, 5, 7]
+    syl_pos = 0
+    for foot in range(min(4, len(scheme))):
+        code = scheme[foot]
+        size = FOOT_SIZE.get(code, 0)
+        m_pos = syl_pos + 1
+        f_pos = syl_pos + 2
+        hf = HALF_FEET[foot]
+        if pos == m_pos:
+            return COL_NAMES[foot], f'{hf}M'
+        if size >= 3 and pos == f_pos:
+            return COL_NAMES[foot], f'{hf}F'
+        syl_pos += size
+    return None
+
+
 def verify_met_caesurae(verses, cols):
     """Compare spreadsheet metrical caesurae with computed positions."""
     has_met_cols = any(k.startswith('met_') for k in cols)
@@ -201,11 +227,19 @@ def verify_met_caesurae(verses, cols):
         csv_only = csv_set - computed
         comp_only = computed - csv_set
         for pos in sorted(csv_only):
+            info = position_to_column(pos, v['scheme'])
+            col_hint = f" (column '{info[0]}')" if info else ''
             print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
-                  f"in spreadsheet but not in text", file=sys.stderr)
+                  f"in spreadsheet but not in text{col_hint}", file=sys.stderr)
         for pos in sorted(comp_only):
+            info = position_to_column(pos, v['scheme'])
+            if info:
+                col_name, val = info
+                hint = f" → write '{val}' in column '{col_name}'"
+            else:
+                hint = ''
             print(f"Warning: [Hexameter] {ref}: metrical caesura at position {pos} "
-                  f"in text but not in spreadsheet", file=sys.stderr)
+                  f"in text but not in spreadsheet{hint}", file=sys.stderr)
 
 
 def load(csv_path):
