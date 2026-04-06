@@ -206,6 +206,132 @@ body {
 }
 
 
+#legend_btn {
+  font-family: system-ui, sans-serif;
+  font-size: 0.85em;
+  cursor: pointer;
+  border: 1px solid #aab;
+  border-radius: 50%;
+  width: 1.8em;
+  height: 1.8em;
+  background: #fff;
+  color: #888;
+  font-weight: bold;
+}
+
+#legend-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#legend-overlay.hidden {
+  display: none;
+}
+
+#legend {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.2em 1.5em;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  font-family: system-ui, sans-serif;
+  font-size: 0.9em;
+  color: #333;
+}
+
+#legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8em;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+#legend-close {
+  background: none;
+  border: none;
+  font-size: 1.4em;
+  cursor: pointer;
+  color: #888;
+  padding: 0 0.2em;
+}
+
+#legend table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#legend td {
+  padding: 0.3em 0.4em;
+  vertical-align: middle;
+}
+
+#legend td:first-child {
+  width: 2em;
+  text-align: center;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 1.2em;
+  height: 1em;
+  border-radius: 2px;
+}
+
+.legend-line {
+  display: inline-block;
+}
+
+.legend-breve {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.2em;
+  border: 2px solid #000;
+  border-top: none;
+  border-radius: 0 0 50% 50%;
+}
+
+.legend-arc {
+  display: inline-block;
+  width: 1.2em;
+  height: 0.3em;
+  border: 2px solid orange;
+  border-bottom: none;
+  border-radius: 50% 50% 0 0;
+}
+
+.legend-dot::before {
+  content: "\2022";
+  color: #c44;
+  font-size: 1.2em;
+}
+
+#legend-controls {
+  margin-top: 0.8em;
+  padding-top: 0.6em;
+  border-top: 1px solid #ddd;
+  font-size: 0.85em;
+  color: #666;
+}
+
+#legend-controls p {
+  margin: 0.3em 0;
+}
+
+#legend-controls kbd {
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 0 0.3em;
+  font-size: 0.9em;
+}
+
 /*
 .error {
   color: #c44;

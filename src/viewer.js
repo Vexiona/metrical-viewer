@@ -209,7 +209,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  // Legend popup
+  var overlay = document.getElementById('legend-overlay');
+  document.getElementById('legend_btn').addEventListener('click', function() {
+    overlay.classList.remove('hidden');
+  });
+  document.getElementById('legend-close').addEventListener('click', function() {
+    overlay.classList.add('hidden');
+  });
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
+
   document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      overlay.classList.add('hidden');
+      return;
+    }
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     if (!document.querySelector('.selected')) return;
     e.preventDefault();
