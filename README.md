@@ -14,12 +14,6 @@ make clean      # remove build artifacts
 
 The output is a single self-contained HTML file at `build/viewer.html`.
 
-Build warnings (syllable mismatches, caesura verification, etc.) are printed to stderr. To capture them:
-
-```
-make 2> warnings.txt
-```
-
 ## Project structure
 
 ```

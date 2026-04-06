@@ -4,7 +4,7 @@ build/viewer.html: data/hex.csv data/iamb.csv data/pentameter.csv src/build.py s
 	python3 src/build.py -o build/viewer.html
 
 zip: build/viewer.html
-	zip -9 build/anthologia-palatina.zip build/viewer.html data/*.csv data/*.xlsx src/*.py src/*.html src/*.css src/*.js Makefile LICENSE LICENSE-CODE LICENSE-DATA
+	zip -9 build/anthologia-palatina.zip build/viewer.html data/*.csv data/*.xlsx src/*.py src/*.html src/*.css src/*.js Makefile LICENSE LICENSE-CODE LICENSE-DATA README.md
 
 clean:
 	rm -rf build/*
