@@ -10,6 +10,30 @@ from common import (FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv
 
 HEADER_ROWS = 3
 
+# Syllables per element for each foot type in iambic meter.
+# Each foot has 2 elements (thesis + arsis).
+# Trisyllabic feet have one resolved element spanning 2 syllables.
+ELEMENT_SYLS = {
+    'I': [1, 1], 'S': [1, 1], 'P': [1, 1],
+    'A': [2, 1],  # anapest: resolved thesis (uu) + arsis (-)
+    'b': [1, 2],  # tribrach: thesis (u) + resolved arsis (uu)
+    'C': [1, 2],  # cretic: thesis (-) + resolved arsis (u-)
+    'B': [2, 1],  # antibacchius: resolved thesis (--) + arsis (u)
+}
+
+
+def element_to_syllable(scheme, element):
+    """Convert 1-based element (half-foot) position to 1-based syllable position."""
+    syl_pos = 0
+    el_count = 0
+    for code in scheme:
+        for el_syls in ELEMENT_SYLS.get(code, [1, 1]):
+            el_count += 1
+            syl_pos += el_syls
+            if el_count == element:
+                return syl_pos
+    return element  # fallback
+
 
 def convert_verse(row, ref, cols):
     scheme_col = cols.get('scheme')
@@ -29,7 +53,7 @@ def convert_verse(row, ref, cols):
     if col_idx is not None:
         val = row[col_idx].strip() if len(row) > col_idx else ''
         if val.isdigit() and int(val) <= 12:
-            caesurae = [int(val)]
+            caesurae = [element_to_syllable(our_scheme, int(val))]
 
     return our_scheme, caesurae
 
