@@ -347,6 +347,25 @@ body {
 }
 */
 
+#license {
+  position: fixed;
+  bottom: 0.4em;
+  right: 0.6em;
+  font-family: system-ui, sans-serif;
+  font-size: 0.7em;
+  color: #aaa;
+  text-align: right;
+}
+
+#license a {
+  color: #889;
+  text-decoration: none;
+}
+
+#license a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 600px) {
   .greektext-inner {
     display: block;
