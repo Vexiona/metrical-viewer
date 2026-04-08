@@ -12,4 +12,4 @@ The output is a single HTML file with seven overlay toggles (colors, scansion ma
 
 ## Development process
 
-The software was developed with significant use of generative AI. However, all behavior and output were independently verified by the authors. Should any reader find the software useful, we would appreciate if modifications to the code were contributed back to the project at https://github.com/Vexiona/anthologia-palatina, or at least made publicly available. However, we do not impose any requirement to do so beyond what is needed under the GPLv3. 
+The software was developed with significant use of generative AI. However, all behavior and output were independently verified by the authors. Should any reader find the software useful, we would appreciate if modifications to the code were contributed back to the project at https://github.com/Vexiona/metrical-viewer, or at least made publicly available. However, we do not impose any requirement to do so beyond what is needed under the GPLv3. 
