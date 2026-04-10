@@ -338,6 +338,8 @@ def find_columns(rows, header_rows=3):
                 cols['bridge_naeke'] = j
             elif v.startswith('hilberg') and 'bridge_hilberg' not in cols:
                 cols['bridge_hilberg'] = j
+            elif v == 'manuscript version' and 'ms_text' not in cols:
+                cols['ms_text'] = j
             elif v.startswith('homodynia') and 'homodynia' not in cols:
                 cols['homodynia'] = j
             elif ('distich' in v or 'στίχον' in v) and 'verse_type' not in cols:
@@ -375,6 +377,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
     epigram_col = cols.get('epigram')
     verse_col = cols.get('verse_num')
     type_col = cols.get('verse_type')
+    ms_col = cols.get('ms_text')
     verses = []
     skipped = 0
 
@@ -387,6 +390,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
         epigram = row[epigram_col].strip() if epigram_col and len(row) > epigram_col else ''
         verse = row[verse_col].strip() if verse_col and len(row) > verse_col else ''
         verse_type = row[type_col].strip() if type_col is not None and len(row) > type_col else ''
+        ms_text = row[ms_col].strip() if ms_col is not None and len(row) > ms_col else ''
         ref = f"{epigram}.{verse}" if epigram and verse else str(len(verses) + 1)
 
         result = convert_fn(row, ref, cols)
@@ -396,7 +400,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
                 'epigram': epigram, 'verse': verse, 'text': text,
                 'scheme': '', 'caesurae': [], 'meter': meter,
                 'syllables': None, 'quantities': None,
-                'verse_type': verse_type,
+                'verse_type': verse_type, 'ms_text': ms_text,
             })
             skipped += 1
         else:
@@ -419,7 +423,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
                 'scheme': scheme, 'caesurae': caesurae, 'met_caesurae': met_caesurae,
                 'meter': meter,
                 'syllables': syllables, 'quantities': quantities,
-                'verse_type': verse_type,
+                'verse_type': verse_type, 'ms_text': ms_text,
             })
 
     print(f"Converted {len(verses)} rows, skipped {skipped}", file=sys.stderr)

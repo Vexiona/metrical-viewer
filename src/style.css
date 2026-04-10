@@ -226,6 +226,19 @@ body {
   z-index: 1;
 }
 
+.has-ms > .ref {
+  color: orange;
+}
+
+.ms-line {
+  display: none;
+  color: orange;
+}
+
+.selected .ms-line {
+  display: block;
+}
+
 :is(.selected, .expanded) .homodynia::before {
   content: "\2022";
   position: absolute;

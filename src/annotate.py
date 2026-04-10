@@ -81,9 +81,17 @@ def verse_to_html(v):
 
     if not v['scheme'] or v['syllables'] is None:
         raw = v['text'].replace('#', '').replace('  ', ' ')
-        return f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
+        html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
+    else:
+        html = generate_line(v)
 
-    return generate_line(v)
+    ms_text = v.get('ms_text', '')
+    if ms_text:
+        html = html.replace('class="line', 'class="line has-ms', 1)
+        ms_span = f'<span class="ms-line"><span class="ref">ms.</span>{ms_text}</span>'
+        html = html[:-len('</div>')] + '\n' + ms_span + '\n    </div>'
+
+    return html
 
 
 def assemble_page(verses):
