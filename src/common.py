@@ -310,12 +310,18 @@ def find_columns(rows, header_rows=3):
                 cols['func_first'] = j
             elif v == 'first foot' and 'func_first' in cols and 'met_first' not in cols:
                 cols['met_first'] = j
-            elif v == 'triem' and 'func_triem' not in cols:
+            elif v == 'trihem' and 'func_triem' not in cols:
                 cols['func_triem'] = j
-            elif v == 'penth' and 'func_penth' not in cols:
+            elif v == 'trihem' and 'func_triem' in cols and 'met_triem' not in cols:
+                cols['met_triem'] = j
+            elif v == 'penthem' and 'func_penth' not in cols:
                 cols['func_penth'] = j
-            elif v == 'hephth' and 'func_hephth' not in cols:
+            elif v == 'penthem' and 'func_penth' in cols and 'met_penth' not in cols:
+                cols['met_penth'] = j
+            elif v == 'hephthem' and 'func_hephth' not in cols:
                 cols['func_hephth'] = j
+            elif v == 'hephthem' and 'func_hephth' in cols and 'met_hephth' not in cols:
+                cols['met_hephth'] = j
             elif v.startswith('bucolic'):
                 cols['func_bucolic'] = j
             elif v in ('d1', 'd2', 'd3', 'd4', 'd4 (bucolic)', 'd5'):
@@ -332,12 +338,6 @@ def find_columns(rows, header_rows=3):
                 cols['bridge_naeke'] = j
             elif v.startswith('hilberg') and 'bridge_hilberg' not in cols:
                 cols['bridge_hilberg'] = j
-            elif v == 'trihemim' and 'met_triem' not in cols:
-                cols['met_triem'] = j
-            elif v == 'penthem' and 'met_penth' not in cols:
-                cols['met_penth'] = j
-            elif v == 'hephth' and 'func_hephth' in cols and 'met_hephth' not in cols:
-                cols['met_hephth'] = j
             elif v.startswith('homodynia') and 'homodynia' not in cols:
                 cols['homodynia'] = j
             elif ('distich' in v or 'στίχον' in v) and 'verse_type' not in cols:
