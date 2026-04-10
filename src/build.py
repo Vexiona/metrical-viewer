@@ -85,7 +85,10 @@ def main():
         with open(authors_path, encoding='utf-8-sig') as f:
             for row in csv.reader(f):
                 if len(row) >= 2 and row[0].strip().isdigit():
-                    ep_authors[int(row[0].strip())] = row[1].strip()
+                    author = row[1].strip()
+                    if author.startswith('<') and author.endswith('>'):
+                        author = '<' + author[1:-1].strip() + '>'
+                    ep_authors[int(row[0].strip())] = author
 
     for v in all_verses:
         v['_ep_type'] = ep_types.get(v['_ep_num'], '')

@@ -112,7 +112,7 @@ def assemble_page(verses):
             author_safe = ep_author.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             author_label = f' <span class="epigram-author">{author_safe}</span>' if ep_author else ''
             parts.append('    <div class="epigram">')
-            parts.append(f'    <div class="epigram-num"><span class="ref">ep. {ep_display}</span>{type_label}{author_label}</div>')
+            parts.append(f'    <div class="epigram-num"><span class="ref">ep. {ep_display}</span>{author_label}{type_label}</div>')
             current_ep = v['_ep_num']
         parts.append(v['_html'])
     if current_ep is not None:
