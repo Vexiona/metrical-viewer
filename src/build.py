@@ -11,6 +11,7 @@ Reads data/hex.csv, data/iamb.csv, data/pentameter.csv and produces
 a single self-contained HTML file.
 """
 
+import csv
 import sys
 from pathlib import Path
 
@@ -77,8 +78,18 @@ def main():
                       f"computed type '{computed}' but spreadsheet says '{csv_type}'",
                       file=sys.stderr)
 
+    # Load authors
+    ep_authors = {}
+    authors_path = DATA_DIR / 'authors.csv'
+    if authors_path.exists():
+        with open(authors_path, encoding='utf-8-sig') as f:
+            for row in csv.reader(f):
+                if len(row) >= 2 and row[0].strip().isdigit():
+                    ep_authors[int(row[0].strip())] = row[1].strip()
+
     for v in all_verses:
         v['_ep_type'] = ep_types.get(v['_ep_num'], '')
+        v['_ep_author'] = ep_authors.get(int(v['_ep_num']), '') if v['_ep_num'] == int(v['_ep_num']) else ''
 
     # Generate HTML for each verse
     for v in all_verses:

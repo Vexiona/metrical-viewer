@@ -142,6 +142,13 @@ body {
   font-weight: normal;
   font-size: 0.85em;
   color: #999;
+  margin-right: 1.5em;
+}
+
+.epigram-author {
+  font-weight: normal;
+  font-size: 0.85em;
+  color: #999;
 }
 
 .line {
@@ -232,6 +239,10 @@ body {
 
 .ms-line {
   display: none;
+  color: orange;
+}
+
+.ms-line .ref {
   color: orange;
 }
 
