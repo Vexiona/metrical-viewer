@@ -97,12 +97,14 @@ def merge_syllables(syllables):
 
     Returns new syllables list.
     """
-    # Merge consonant elisions (apostrophe after consonant) with next syllable
+    # Merge consonant-only elision syllables (e.g. δ', τ', λ') with next
+    # syllable. A syllable with a vowel before the apostrophe (e.g. ζετ', οι')
+    # is treated as a complete syllable and left in place.
     i = 0
     while i < len(syllables) - 1:
         syl = syllables[i][0]
         apos = syl.find("'")
-        if apos > 0 and syl[apos - 1].lower() not in GREEK_VOWELS:
+        if apos > 0 and not any(c.lower() in GREEK_VOWELS for c in syl[:apos]):
             merged_text = syl + syllables[i + 1][0]
             merged_wordend = syllables[i + 1][1]
             syllables = syllables[:i] + [(merged_text, merged_wordend)] + syllables[i + 2:]
