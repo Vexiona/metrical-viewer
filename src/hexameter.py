@@ -194,11 +194,11 @@ def compute_met_caesura_positions(scheme, syllables):
 def position_to_column(pos, scheme):
     """Map a 1-based syllable position to spreadsheet column name and M/F value.
 
-    Returns (column_name, value) like ('trihemim', '3M') or ('penthem', '5F'),
+    Returns (column_name, value) like ('second foot', '3M') or ('third foot', '5F'),
     or None if the position doesn't correspond to a standard caesura slot.
     The values use traditional half-foot numbering: 1, 3, 5, 7.
     """
-    COL_NAMES = ['first foot', 'trihemim', 'penthem', 'hephth']
+    COL_NAMES = ['first foot', 'second foot', 'third foot', 'fourth foot']
     HALF_FEET = [1, 3, 5, 7]
     syl_pos = 0
     for foot in range(min(4, len(scheme))):

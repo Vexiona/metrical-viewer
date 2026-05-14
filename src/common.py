@@ -55,6 +55,15 @@ STANDARD = {
 
 DASHES = {'\u2013', '\u2015'}  # EN DASH, HORIZONTAL BAR
 
+# Caesura sub-header name -> internal suffix. Each appears twice in hex.csv:
+# first under "functional caesura", then under "metrical caesura".
+CAESURA_HEADERS = {
+    'first foot':  'first',
+    'second foot': 'triem',
+    'third foot':  'penth',
+    'fourth foot': 'hephth',
+}
+
 GREEK_VOWELS = set('αεηιουωάέήίόύώὰὲὴὶὸὺὼᾶῆῖῦῶ'
                     'ἀἁἂἃἄἅἆἇἐἑἒἓἔἕἠἡἢἣἤἥἦἧ'
                     'ἰἱἲἳἴἵἶἷὀὁὂὃὄὅὐὑὒὓὔὕὖὗ'
@@ -308,22 +317,12 @@ def find_columns(rows, header_rows=3):
                 cols['epigram'] = j
             elif v == 'verse no.' and 'verse_num' not in cols:
                 cols['verse_num'] = j
-            elif v == 'first foot' and 'func_first' not in cols:
-                cols['func_first'] = j
-            elif v == 'first foot' and 'func_first' in cols and 'met_first' not in cols:
-                cols['met_first'] = j
-            elif v == 'trihem' and 'func_triem' not in cols:
-                cols['func_triem'] = j
-            elif v == 'trihem' and 'func_triem' in cols and 'met_triem' not in cols:
-                cols['met_triem'] = j
-            elif v == 'penthem' and 'func_penth' not in cols:
-                cols['func_penth'] = j
-            elif v == 'penthem' and 'func_penth' in cols and 'met_penth' not in cols:
-                cols['met_penth'] = j
-            elif v == 'hephthem' and 'func_hephth' not in cols:
-                cols['func_hephth'] = j
-            elif v == 'hephthem' and 'func_hephth' in cols and 'met_hephth' not in cols:
-                cols['met_hephth'] = j
+            elif v in CAESURA_HEADERS:
+                suffix = CAESURA_HEADERS[v]
+                if f'func_{suffix}' not in cols:
+                    cols[f'func_{suffix}'] = j
+                elif f'met_{suffix}' not in cols:
+                    cols[f'met_{suffix}'] = j
             elif v.startswith('bucolic'):
                 cols['func_bucolic'] = j
             elif v in ('d1', 'd2', 'd3', 'd4', 'd4 (bucolic)', 'd5'):
