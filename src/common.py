@@ -233,6 +233,12 @@ def verify_homodynia(verses, rows, header_rows, cols, meter):
 
     data_rows = rows[header_rows:]
     text_col = cols['text']
+
+    # Skip when the column is present but entirely blank (e.g. a spreadsheet that
+    # only annotates the basic metre): there is nothing to verify against.
+    if not any(len(r) > hom_col and r[hom_col].strip() for r in data_rows):
+        return
+
     verse_idx = 0
 
     for row in data_rows:
@@ -274,27 +280,42 @@ def expand_scheme(scheme):
     return result
 
 
+def tokenize_scheme(s, token_map=FOOT_TOKENS, tokens_by_length=_TOKENS_BY_LENGTH,
+                    strict=True):
+    """Greedily tokenize a scheme string into a list of internal foot codes.
+
+    At each position the longest matching token wins; whitespace is skipped.
+    token_map maps spreadsheet tokens to internal codes; tokens_by_length is the
+    same keys sorted longest-first (precomputed by the caller).
+
+    strict=True returns None on the first unrecognized character (used where an
+    unparseable scheme should be rejected); strict=False skips it (used where a
+    stray marker should be tolerated). Returns the list of codes otherwise.
+    """
+    codes = []
+    i = 0
+    while i < len(s):
+        if s[i].isspace():
+            i += 1
+            continue
+        for tok in tokens_by_length:
+            if s[i:i + len(tok)] == tok:
+                codes.append(token_map[tok])
+                i += len(tok)
+                break
+        else:
+            if strict:
+                return None
+            i += 1
+    return codes
+
+
 def parse_scheme(scheme_raw, num_feet=None):
     """Parse a scheme string into internal format.
 
     Returns scheme string or None on failure.
     """
-    result = []
-    s = scheme_raw.strip()
-    i = 0
-    while i < len(s):
-        if s[i] == ' ':
-            i += 1
-            continue
-        matched = False
-        for tok in _TOKENS_BY_LENGTH:
-            if s[i:i+len(tok)] == tok:
-                result.append(FOOT_TOKENS[tok])
-                i += len(tok)
-                matched = True
-                break
-        if not matched:
-            return None
+    result = tokenize_scheme(scheme_raw, strict=True)
     if not result:
         return None
     if num_feet is not None and len(result) != num_feet:
@@ -364,6 +385,19 @@ def read_csv(path):
         return list(csv.reader(f))
 
 
+def detect_header_rows(rows):
+    """Return the number of leading header rows before the first data row.
+
+    Data rows always contain hyphenated text (a '#' in some cell); header and
+    descriptor rows never do. This lets the same loaders handle spreadsheets
+    with a banner + sub-header layout (3 rows) and bare single-header files.
+    """
+    for i, row in enumerate(rows):
+        if any('#' in cell for cell in row):
+            return i
+    return 1
+
+
 def process_rows(rows, header_rows, cols, convert_fn, meter=''):
     """Main processing loop shared by all converters.
 
@@ -380,18 +414,33 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
     type_col = cols.get('verse_type')
     ms_col = cols.get('ms_text')
     verses = []
+    placeholders = []
     skipped = 0
 
     for i in range(header_rows, len(rows)):
         row = rows[i]
         text = row[text_col].strip() if len(row) > text_col else ''
-        if not text:
-            continue
 
         epigram = row[epigram_col].strip() if epigram_col and len(row) > epigram_col else ''
         verse = row[verse_col].strip() if verse_col and len(row) > verse_col else ''
         verse_type = row[type_col].strip() if type_col is not None and len(row) > type_col else ''
         ms_text = row[ms_col].strip() if ms_col is not None and len(row) > ms_col else ''
+
+        if not text:
+            # A numbered verse with no text is a lacuna (e.g. a lost pentameter):
+            # reserve an empty slot so the distich keeps its shape. Collected
+            # separately and appended after the real verses, leaving the
+            # row-aligned verify passes below untouched.
+            if epigram and verse:
+                placeholders.append({
+                    'epigram': epigram, 'verse': verse, 'text': '',
+                    'scheme': '', 'caesurae': [], 'met_caesurae': [], 'meter': meter,
+                    'syllables': None, 'quantities': None,
+                    'verse_type': verse_type, 'ms_text': ms_text,
+                    'placeholder': True,
+                })
+            continue
+
         ref = f"{epigram}.{verse}" if epigram and verse else str(len(verses) + 1)
 
         result = convert_fn(row, ref, cols)
@@ -427,5 +476,7 @@ def process_rows(rows, header_rows, cols, convert_fn, meter=''):
                 'verse_type': verse_type, 'ms_text': ms_text,
             })
 
-    print(f"Converted {len(verses)} rows, skipped {skipped}", file=sys.stderr)
+    verses.extend(placeholders)
+    print(f"Converted {len(verses) - len(placeholders)} rows, skipped {skipped}, "
+          f"placeholders {len(placeholders)}", file=sys.stderr)
     return verses, skipped

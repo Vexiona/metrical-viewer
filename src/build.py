@@ -5,13 +5,15 @@
 """Build the metrical viewer HTML from source spreadsheets.
 
 Usage:
-    python build.py [-o output.html]
+    python build.py [--data DIR] [-o output.html]
 
-Reads data/hex.csv, data/iamb.csv, data/pentameter.csv and produces
-a single self-contained HTML file.
+Reads the hexameter, pentameter and (optional) iambic spreadsheets from the
+data directory and produces a single self-contained HTML file. Each meter file
+is loaded only if present, so a directory may hold any subset of meters.
 """
 
 import csv
+import json
 import sys
 from pathlib import Path
 
@@ -20,7 +22,14 @@ import iamb
 import pentameter
 from annotate import verse_to_html, assemble_page
 
-DATA_DIR = Path(__file__).parent.parent / 'data'
+DEFAULT_DATA_DIR = Path(__file__).parent.parent / 'data'
+
+# Filename per meter. A file is loaded only if present in the data directory.
+METER_FILES = {
+    hexameter: 'hex.csv',
+    pentameter: 'pentameter.csv',
+    iamb: 'iamb.csv',
+}
 
 
 def main():
@@ -28,11 +37,30 @@ def main():
     if '-o' in sys.argv:
         out_path = sys.argv[sys.argv.index('-o') + 1]
 
-    # Load all verses from spreadsheets
+    if '--data' in sys.argv:
+        data_dir = Path(sys.argv[sys.argv.index('--data') + 1])
+    else:
+        data_dir = DEFAULT_DATA_DIR
+
+    # Per-book presentation metadata (page title, footer licence markup).
+    title = None
+    license_html = None
+    meta_path = data_dir / 'book.json'
+    if meta_path.exists():
+        meta = json.loads(meta_path.read_text(encoding='utf-8'))
+        title = meta.get('title')
+        lic = meta.get('license')
+        if isinstance(lic, list):
+            license_html = '\n'.join('  ' + line for line in lic) if lic else None
+        elif isinstance(lic, str):
+            license_html = lic.strip() or None
+
+    # Load all verses from whichever meter spreadsheets exist in the directory
     all_verses = []
-    all_verses.extend(hexameter.load(DATA_DIR / 'hex.csv'))
-    all_verses.extend(iamb.load(DATA_DIR / 'iamb.csv'))
-    all_verses.extend(pentameter.load(DATA_DIR / 'pentameter.csv'))
+    for module, name in METER_FILES.items():
+        path = data_dir / name
+        if path.exists():
+            all_verses.extend(module.load(path))
 
     # Sort by epigram, then verse number
     for v in all_verses:
@@ -80,7 +108,7 @@ def main():
 
     # Load authors
     ep_authors = {}
-    authors_path = DATA_DIR / 'authors.csv'
+    authors_path = data_dir / 'authors.csv'
     if authors_path.exists():
         with open(authors_path, encoding='utf-8-sig') as f:
             for row in csv.reader(f):
@@ -99,7 +127,7 @@ def main():
         v['_html'] = verse_to_html(v)
 
     if out_path:
-        page = assemble_page(all_verses)
+        page = assemble_page(all_verses, title=title, license_html=license_html)
         Path(out_path).write_text(page, encoding='utf-8')
         print(f"Wrote {out_path}", file=sys.stderr)
     else:

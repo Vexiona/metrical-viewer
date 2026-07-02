@@ -6,10 +6,9 @@
 import sys
 from common import (FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv,
                     process_rows, verify_bridges, compute_homodynia, ictus_positions,
-                    verify_homodynia)
+                    verify_homodynia, detect_header_rows)
 
 NUM_FEET = 6
-HEADER_ROWS = 3
 
 
 def pick_caesurae(row, our_scheme, cols, prefix='func'):
@@ -272,12 +271,14 @@ def verify_func_subset_met(verses):
                   f"not marked as metrical{hint}", file=sys.stderr)
 
 
-def load(csv_path):
+def load(csv_path, header_rows=None):
     """Load hexameter verses from spreadsheet. Returns verse dicts."""
     rows = read_csv(csv_path)
-    cols = find_columns(rows, HEADER_ROWS)
+    if header_rows is None:
+        header_rows = detect_header_rows(rows)
+    cols = find_columns(rows, header_rows)
     print(f"Detected columns: {cols}", file=sys.stderr)
-    verses, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse, meter='Hexameter')
+    verses, _ = process_rows(rows, header_rows, cols, convert_verse, meter='Hexameter')
 
     # Compute bridges for each verse
     for v in verses:
@@ -285,6 +286,16 @@ def load(csv_path):
             v['bridges'] = compute_bridges(v['scheme'], v['syllables'])
         else:
             v['bridges'] = {}
+
+    # When the spreadsheet carries no metrical-caesura columns (e.g. a file with
+    # only the basic metre annotated), derive them from the text so the overlay
+    # still works. Files that do annotate them keep their values for verification.
+    has_met_cols = any(k.startswith('met_') for k in cols)
+    if not has_met_cols:
+        for v in verses:
+            if v['syllables'] is not None and v['scheme']:
+                v['met_caesurae'] = sorted(
+                    compute_met_caesura_positions(v['scheme'], v['syllables']))
 
     # Compute homodynia (ictus on 1st syllable)
     for v in verses:
@@ -295,10 +306,10 @@ def load(csv_path):
             v['homodynia'] = []
             v['_ictus_positions'] = {}
 
-    verify_diaereses(verses, rows, HEADER_ROWS, cols)
-    verify_bridges(verses, rows, HEADER_ROWS, cols, 'Hexameter',
+    verify_diaereses(verses, rows, header_rows, cols)
+    verify_bridges(verses, rows, header_rows, cols, 'Hexameter',
                    ['meyer', 'hermann', 'naeke', 'hilberg'])
-    verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Hexameter')
+    verify_homodynia(verses, rows, header_rows, cols, 'Hexameter')
     verify_met_caesurae(verses, cols)
     verify_func_subset_met(verses)
     return verses

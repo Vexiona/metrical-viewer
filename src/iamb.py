@@ -6,9 +6,7 @@
 import sys
 from common import (FOOT_SIZE, foot_starts, parse_scheme, find_columns, read_csv,
                     process_rows, verify_bridges, compute_homodynia, ictus_positions,
-                    verify_homodynia)
-
-HEADER_ROWS = 3
+                    verify_homodynia, detect_header_rows)
 
 # Syllables per element for each foot type in iambic meter.
 # Each foot has 2 elements (thesis + arsis).
@@ -76,12 +74,14 @@ def compute_bridges(scheme, syllables):
     return violations
 
 
-def load(csv_path):
+def load(csv_path, header_rows=None):
     """Load iambic verses from spreadsheet. Returns verse dicts."""
     rows = read_csv(csv_path)
-    cols = find_columns(rows, HEADER_ROWS)
+    if header_rows is None:
+        header_rows = detect_header_rows(rows)
+    cols = find_columns(rows, header_rows)
     print(f"Detected columns: {cols}", file=sys.stderr)
-    verses, _ = process_rows(rows, HEADER_ROWS, cols, convert_verse, meter='Iamb')
+    verses, _ = process_rows(rows, header_rows, cols, convert_verse, meter='Iamb')
 
     for v in verses:
         if v['syllables'] is not None and v['scheme']:
@@ -98,6 +98,6 @@ def load(csv_path):
             v['homodynia'] = []
             v['_ictus_positions'] = {}
 
-    verify_bridges(verses, rows, HEADER_ROWS, cols, 'Iamb', ['porson'])
-    verify_homodynia(verses, rows, HEADER_ROWS, cols, 'Iamb')
+    verify_bridges(verses, rows, header_rows, cols, 'Iamb', ['porson'])
+    verify_homodynia(verses, rows, header_rows, cols, 'Iamb')
     return verses

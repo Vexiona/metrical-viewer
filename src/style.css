@@ -161,6 +161,11 @@ body {
   margin-right: 2.4em;
 }
 
+/* A lost/absent verse: an empty line holding the distich's shape. */
+.line.lacuna .ref {
+  opacity: .45;
+}
+
 .ref {
   display: inline-block;
   min-width: 3.5em;

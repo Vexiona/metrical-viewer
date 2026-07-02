@@ -3,6 +3,7 @@
 
 """HTML generation from pre-parsed verse data."""
 
+import re
 from pathlib import Path
 from common import STANDARD
 
@@ -79,6 +80,11 @@ def verse_to_html(v):
     """Convert a verse dict to HTML. Handles errors and missing data."""
     ref = v['verse'] or ''
 
+    if v.get('placeholder'):
+        # A lost/absent verse: reserve a blank line so the distich keeps its shape.
+        line_class = 'line pent lacuna' if v['meter'] == 'Pentameter' else 'line lacuna'
+        return f'    <div class="{line_class}"><span class="ref">{ref}</span>&#160;</div>'
+
     if not v['scheme'] or v['syllables'] is None:
         raw = v['text'].replace('#', '').replace('  ', ' ')
         html = f'    <div class="line error"><span class="ref">{ref}</span>{raw}</div>'
@@ -94,10 +100,24 @@ def verse_to_html(v):
     return html
 
 
-def assemble_page(verses):
-    """Build full self-contained page from sorted verse list."""
+def assemble_page(verses, title=None, license_html=None):
+    """Build full self-contained page from sorted verse list.
+
+    title: override the page heading (and <title>); None keeps the template's.
+    license_html: inner markup for the footer licence box; falsy drops the box.
+    """
     header = (SCRIPT_DIR / 'header.html').read_text(encoding='utf-8')
     footer = (SCRIPT_DIR / 'footer.html').read_text(encoding='utf-8')
+
+    if title is not None:
+        safe = title.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        header = re.sub(r'(<div id="title">).*?(</div>)', rf'\g<1>{safe}\g<2>',
+                        header, count=1, flags=re.S)
+        header = re.sub(r'(<title>).*?(</title>)', rf'\g<1>{safe}\g<2>',
+                        header, count=1, flags=re.S)
+
+    license_block = f'<div id="license">\n{license_html}\n</div>' if license_html else ''
+    footer = footer.replace('<!-- LICENSE -->', license_block)
 
     parts = []
     current_ep = None

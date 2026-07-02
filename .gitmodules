@@ -1,3 +1,6 @@
 [submodule "data"]
 	path = data
 	url = https://github.com/Vexiona/anthologia-palatina.git
+[submodule "data3"]
+	path = data3
+	url = /opt/Code/anthologia-palatina-book3.git
